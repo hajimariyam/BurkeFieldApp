@@ -1,0 +1,108 @@
+/* Header and hamburger menu */
+.navbar {
+    background-color: #00838F !important;
+}
+
+.nav-link{
+    color: white !important;
+}
+
+.navbar-text{
+    color: white !important;
+}
+
+.navbar-dark .navbar-toggler {
+    color: none;
+    border:none;
+    border-color: none;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+}
+
+.navbar-toggler {
+    float: left;
+}
+
+.title {
+    color: white;
+    text-align: center; 
+}
+
+/* User dropdown menu */
+.group-text #userDropdownMenu {
+    right: 0;
+    left: auto;
+    background-color: #00838F !important;
+    font-size: 1.2em;
+    margin-top: 0.85em;
+    margin-right: 0.5em;
+    box-shadow: 5px 5px 5px #7db1b6;
+}
+
+#userDropdownBtn, #userDropdownItem, .btn {
+    background-color: #00838F !important;
+    color: white !important;
+}
+
+#userDropdownItem:focus, #userDropdownItem:hover {
+    background-color: #00838F !important;
+}
+
+/* Green / red alert banner */
+.alert-success, .alert-danger {
+    margin-bottom: 0%;
+}
+
+.btn-close {
+    background: none !important;
+    padding: 1rem 1rem !important;
+    box-shadow: none;
+}
+
+.btn-close:focus {
+    box-shadow: none !important;
+}
+
+/* Footer */
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 2.7rem;
+    background-color:#00838F !important;
+    z-index: 50;
+}
+
+/* Left button in footer */
+.editbtn{
+    background-color: #00838F;
+    border-color: #00838F;
+    color: white;
+    position: fixed;
+    margin-bottom: 8px;
+    padding-left: 5%;
+    bottom: 0;
+    left: 0;
+    font-size: 1.15em;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+    z-index: 100;
+}
+
+/* Right button in footer */
+.createbtn{
+    background-color: #00838F;
+    border-color: #00838F;
+    color: white;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 8px;
+    padding-right: 5%;
+    font-size: 1.15em;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+    z-index: 100;
+}

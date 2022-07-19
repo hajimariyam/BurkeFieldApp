@@ -1,0 +1,83 @@
+/* Header links */
+.header-link {
+    text-decoration: none;
+    color: white !important;
+}
+
+/* Timestamp */
+.time {
+    float: left;
+    font-size: 18px;
+    font-weight: bold;
+    color: rgb(100, 100, 100);
+    padding-left: 15%;
+    padding-bottom: 1%;
+}
+
+/* Action icon */
+#immediate {
+    color: rgb(230, 24, 24);
+    float: right;
+    padding-right: 15%;
+    margin-top: -1%;
+}
+
+#pending {
+    color: #e3e632ce;
+    float: right;
+    padding-right: 15%;
+    margin-top: -1%;
+}
+
+#flagged {
+    color: #00838F;
+    float: right;
+    padding-right: 15%;
+    margin-top: -1%;
+}
+
+#none {
+    color: white;
+    margin-top: -1%;
+}
+
+/* Photo */
+.image {
+    text-align: center;
+    width:100%;
+    height: 100%;
+}
+
+/* Caption */
+.captiontext {
+    text-decoration: none;
+    color: black;
+    text-align: center;
+}
+
+#caption {
+    padding-top: 10%;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.captiontext:hover {
+    color:black;
+}
+
+/* Retake photo button in footer */
+.addbtn{
+    background-color: #00838F;
+    border-color: #00838F;
+    color: white;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 5px;
+    padding-right: 5%;
+    height: 2.0em;
+    padding: none !important;
+    font-size: 1.15em;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+}

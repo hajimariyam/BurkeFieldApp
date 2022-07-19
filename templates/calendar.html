@@ -1,0 +1,140 @@
+{% extends "base.html" %} 
+
+{% block title %}
+    Project {{proj_number}} | Calendar
+{% endblock %}
+
+{% block header %}
+<div style="text-align: center;">
+    <a class="header-link" href="{{ url_for('views.view_projects',  client = client, sortby = 'asc' ) }}">
+        <h2 style="margin-bottom: 0em;">
+            <!-- display without client prefixes and only 18 characters max -->
+            {% for prefix in prefixes %}
+                {% if prefix in client %}
+                    {% set name = client.replace(prefix, "") %}
+                    {% if name|length < 18 %}
+                        {{ name }}
+                    {% else %}
+                        {{ name[:18] + '...' }}
+                    {% endif %}
+                {% break %}
+                {% endif %}
+            {% endfor %}
+            {% if "Town of " not in client and "City of " not in client and "County of " not in client and "Village of " not in client %}
+                {% if client|length < 18 %}
+                    {{ client }}
+                {% else %}
+                    {{ client[:18] + '...' }}
+                {% endif %}
+            {% endif %}
+        </h2>
+    </a>
+    <h6 style="margin-bottom: -0.2em; margin-top: 0.2em;">
+        {{proj_number}}
+    </h6>
+</div>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet"  href="/static/calendar.css">
+
+<!-- Tab bar -->
+<div>
+    <!-- List view  -->
+    <a class="list" href="{{ url_for('views.view_all_site_visits', projID = projID)  }}"><i class="fa fa-list fa-2x fa-fw"></i></a>
+    <!-- Calendar view (current) -->
+    <a class="calendar"><i class="fa fa-calendar fa-2x fa-fw"></i></a>
+    <!-- Export feature -->
+    <a class="export" href="{{ url_for('views.export_project', projID = projID) }}"><i class="fa fa-download fa-2x fa-fw"></i></a>
+</div>
+
+<hr style="margin-top: 0%; box-shadow: 0 0 3px 2px rgb(180, 180, 180);">
+
+<div class="container" style="margin-bottom: 3.0em; padding: 5%;" id="calendar" ></div>
+<script>
+    let calendarEl = document.getElementById('calendar');
+    let calendar = new FullCalendar.Calendar
+    (calendarEl, {
+        headerToolbar: {
+            left: 'prev',
+            center: 'title',
+            right: 'next'
+        },
+        editable: false,
+        height: 480,
+        selectable: true,
+        aspectRatio: 0.9,
+        handleWindowResize: true,
+        themeSystem: 'standard',
+        eventClick: function(info) {
+            window.location.href= "{{ url_for('views.view_site_visit', siteID = 'tmp', sortby='desc', view='none') }}".replace("tmp", info.event.id);
+        },
+        events: [
+            {% for visit in visits %}
+            {
+                id: '{{visit.sitevisitID}}',
+                title: 'Site Visit',
+                start: '{{visit.date.strftime("%Y-%m-%d")}}'
+            },
+            {% endfor %}
+        ],
+        eventColor: '#00838F'
+    });
+ 
+    calendar.render();
+</script>
+
+<script>
+    const isIOS = 
+        navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
+        navigator.userAgent.match(/AppleWebKit/);
+
+    function init() {
+        if (!isIOS) {
+            window.addEventListener("deviceorientationabsolute", handler, true);
+        }
+    }
+
+    function startCompass() {
+        if (isIOS) {
+            DeviceOrientationEvent.requestPermission()
+            .then((response) => {
+                if (response === "granted") {
+                window.addEventListener("deviceorientation", handler, true);
+                } else {
+                alert("has to be allowed!");
+                }
+            })
+            .catch(() => alert("not supported"));
+        }
+    }
+
+    function handler(e) {
+        compass = e.webkitCompassHeading || Math.abs(e.alpha - 360);
+        var degreeVal = document.getElementById("orientation");
+        degreeVal.value = compass;
+    }
+
+    window.onload = init();
+
+</script>
+
+{% endblock content %}
+
+<!-- Edit project -->
+{% block edit %}
+<a href="{{ url_for('views.edit_project', projID = projID) }}" style="text-decoration: none; color: white;">
+  <button type="button" class="editbtn border-0"><i class="fa fa-pencil-square-o fa-sm fa-fw" aria-hidden="true"></i> Project</button>
+</a>
+{% endblock %}
+
+<!-- Add photo -->
+{% block add %}
+<form method=post enctype=multipart/form-data>
+    <label onclick="startCompass()" class="addbtn border-0 btn btn-primary"><i class="fa fa-plus fa-sm fa-fw"></i> Visit
+        <input class="addphotofile" accept="image/*" type=file 
+        onchange="this.form.submit()" name=file style="display: none;"><br><br>
+        <input type="text" id="orientation" name="orientation" hidden='true'>
+    </label>
+</form>
+{% endblock %}

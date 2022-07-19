@@ -1,0 +1,112 @@
+/* Header links */
+.header-link {
+    color: white !important;
+    text-decoration: none;
+}
+
+/* All elements */
+* {
+    box-sizing:border-box;
+}
+
+/* Tab bar */
+.list{
+    float: left;
+    color: gray;
+    font-size: 14px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    font-weight: 400;
+    margin-top: 5%;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.fa-calendar {
+    margin-bottom: 35% !important;
+}
+
+.calendar{
+    display: inline-block;
+    color: #00838F;
+    border-bottom: 5px solid #00838F;
+    font-size: 14px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    font-weight: 400;
+    margin-left: 5%;
+    margin-top: 5%;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.export{
+    float: right;
+    color: gray;
+    font-size: 16px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    font-weight: 400;
+    margin-top: 5%;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.list:hover, .list:active, .export:hover, .export:active {
+    color: gray;
+}
+
+.calendar:hover, .calendar:active {
+    color: #00838F;
+}
+
+/* Month YYYY */
+.fc .fc-toolbar-title {
+    color: #00838F;
+    font-weight: bold;
+}
+
+/* < > buttons */
+.fc .fc-button-primary {
+    background-color: #00838F;
+    color: #fff;
+    padding: 2px;
+}
+
+/* Days / dates */
+a {
+    color: dimgray;
+    text-decoration: none;
+}
+
+a:hover {
+    color: dimgray;
+}
+
+/* Site visit event */
+.fc-h-event .fc-event-title {
+    display: inline-block;
+    vertical-align: top;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+/* Add visit button in footer */
+.addbtn{
+    background-color: #00838F;
+    border-color: #00838F;
+    color: white;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 5px;
+    padding-right: 5%;
+    height: 2.0em;
+    padding: none !important;
+    font-size: 1.15em;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+}

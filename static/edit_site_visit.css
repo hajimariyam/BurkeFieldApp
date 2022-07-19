@@ -1,0 +1,195 @@
+/* Header links */
+.header-link {
+    text-decoration: none;
+    color: white !important;
+}
+
+/* Delete buttons */
+.delete-visit {
+    padding-right: 6%;
+    padding-top: 6%;
+    float: right;
+}
+
+.delete-photo {
+    padding-left: 5.5%;
+    margin-top: -15%;
+    float: left;
+}
+
+.btn-danger {
+    width: 115px;
+}
+
+/* Header for site visit notes */
+.noteHead {
+    text-align: left;
+    color: #00838F;
+    font-size: 22px; 
+    padding-top: 3%;
+    padding-left: 5%;
+    margin-top: 7%;
+}
+
+/* Text boxes */
+textarea {
+    width: 99%;
+    height: 120px;
+    padding: 5% !important;
+    outline: none;
+    border-radius: 5px;
+    background-color: white;
+    border-color: rgb(150, 150, 150);
+ }
+
+ textarea:focus, textarea:active {
+    box-shadow: 0 0 3px 2px rgb(180, 180, 180);
+ }
+
+/* Site visit notes & date picker */
+.form-control:active, .form-control:focus {
+    box-shadow: 0 0 1px 4px rgb(180, 180, 180);
+    border-color: gray;
+}
+
+.form-control {
+    border-color: rgb(150, 150, 150)
+}
+
+.noteOption[placeholder]:empty:before {
+    content: attr(placeholder);
+    color: #555; 
+}
+
+.noteOption {
+    text-decoration: none;
+    color: black;
+}
+
+#noteOption {
+    padding-bottom: 1%;
+    padding-left: 8%;
+    padding-right: 5%;
+}
+
+.noteOption:hover {
+    color:black;
+}
+
+/* Headers for featured & all photos */
+.photoHeaders {
+    text-align: left;
+    color: #00838F;
+    font-size: 22px; 
+    margin-bottom: 5%;
+    padding-left: 5%;
+}
+
+/* Images */
+img {
+    width: 120px;
+    height: 120px;
+    padding: 2%;
+}
+
+/* Featured photo captions */
+.caption {
+    background-color: white;
+    text-decoration: none;
+    color: black;
+}
+
+#caption {
+    padding-top: 5%;
+    padding-left: 40%;
+    padding-right: 5%;
+    padding-bottom: 2%;
+}
+
+.caption:hover {
+    color: black;
+}
+
+/* Flagging options dropdown menu */
+.dropdown{
+    padding-left: 40%;
+}
+
+.dropdown-menu {
+    max-width: 75%;
+    box-shadow: 5px 5px 5px rgb(180, 180, 180);
+}
+
+.btn-secondary.dropdown-toggle {
+    border-color: rgb(150, 150, 150);
+}
+
+.btn-secondary.dropdown-toggle, .dropdown-menu.dropdown-menu-right, .dropdown-item {
+    background-color: white !important;
+    color: black !important;
+    width: 91%;
+}
+
+.btn-secondary.dropdown-toggle .text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 91%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.dropdown-item {
+    padding-top: 1%;
+    padding-bottom: 3%;
+    padding-left: 5%;
+}
+
+.dropdown-item .text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.dropdown-item:focus, .dropdown-item:hover {
+    background-color: white !important;
+}
+
+#immediate {
+    color: rgb(230, 24, 24);
+}
+
+#pending {
+    color: #e3e632ce;
+}
+
+#flagged {
+    color: #00838F;
+}
+
+#none {
+    color: white;
+}
+
+/* Save button in footer */
+.addbtn{
+    background-color: #00838F;
+    border-color: #00838F;
+    color: white;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 5px;
+    padding-right: 5%;
+    height: 2.0em;
+    padding: none !important;
+    font-size: 1.15em;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+}
+
+.addbtn:focus, .addbtn:active {
+    box-shadow: none !important;
+}

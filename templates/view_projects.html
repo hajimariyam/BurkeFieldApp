@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% for prefix in prefixes %}
+        {% if prefix in client %}
+            {% set name = client.replace(prefix, "") %}
+            {% if name|length < 18 %}
+                {{ name }} | Projects
+            {% else %}
+                {{ name[:18] + '...' + ' | Projects' }}
+            {% endif %}
+        {% break %}
+        {% endif %}
+    {% endfor %}
+    {% if "Town of " not in client and "City of " not in client and "County of " not in client and "Village of " not in client %}
+        {% if client|length < 18 %}
+            {{ client }} | Projects
+        {% else %}
+            {{ client[:18] + '...' + ' | Projects' }}
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block header %}
+<div style="text-align: center;">
+    <h2 style="margin-top: 0.1em; margin-bottom: 0em;">
+        <!-- display without client prefixes and only 18 characters max -->
+        {% for prefix in prefixes %}
+            {% if prefix in client %}
+                {% set name = client.replace(prefix, "") %}
+                {% if name|length < 18 %}
+                    {{ name }}
+                {% else %}
+                    {{ name[:18] + '...' }}
+                {% endif %}
+            {% break %}
+            {% endif %}
+        {% endfor %}
+        {% if "Town of " not in client and "City of " not in client and "County of " not in client and "Village of " not in client %}
+            {% if client|length < 18 %}
+                {{ client }}
+            {% else %}
+                {{ client[:18] + '...' }}
+            {% endif %}
+        {% endif %}
+    </h2>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="/static/view_projects.css">
+
+<div id="body">
+
+<!-- Search Bar -->
+<form method="POST">
+    <div class="input-group">
+        <input class="form-control" type="text" placeholder="Search projects..." autofocus="autofocus" name="search_string">
+        <span class="input-group-text">
+            <!-- Search button -->
+            <button type="submit" formaction="{{ url_for('views.view_projects', sortby='asc', client=client) }}" value="Search"
+            style="background-color: #00838F; color: white;" class="btn">
+            <i class="fa fa-search"></i>
+            </button>
+            <!-- Sort By button -->
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" 
+            aria-haspopup="true" aria-expanded="false" style="margin-left: 0.5em;">
+                Sort By
+            </button>
+            <!-- Sort By dropdown menu -->
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+
+                <!-- linked to view_projects function in views.py with "asc" parameter for ascending order -->
+                <a class="dropdown-item" href="{{ url_for('views.view_projects', sortby='asc', client=client) }}">
+                    <i class="fa fa-sort-numeric-asc fa-fw"></i>
+                    Projects (asc)</a>
+                <!-- linked to view_projects function in views.py with "desc" parameter for descending order -->
+                <a class="dropdown-item" href="{{ url_for('views.view_projects', sortby='desc', client=client) }}">
+                    <i class="fa fa-sort-numeric-desc fa-fw"></i>
+                    Projects (desc)</a>
+                <!-- linked to view_projects function in views.py with "la" parameter for order of last accessed -->
+                <a class="dropdown-item" href="{{ url_for('views.view_projects', sortby='la', client=client) }}">
+                    <i class="fa fa-clock-o fa-fw"></i>
+                    Last Accessed</a>
+            </div>
+        </span>
+    </div>    
+</form>
+
+<!-- Data table -->
+<table class="table table-striped" style="margin-top: 5%;">
+    {% if projects|length == 0 %}
+        {% if sortby == 'la' %}
+            <tr>
+                <td scope="row" style="text-align: center;">
+                    <a style='text-decoration: none; color:black;' href='#'>
+                        You haven't viewed any projects yet.<br>Sort by 
+                        <a><i class="fa fa-sort-numeric-asc fa-fw"></i><strong> Projects (asc)</strong> to begin!</a>
+                    </a>
+                </td>
+            </tr>
+        {% elif search|length > 0 %}
+            <tr>
+                <td scope="row" style="text-align: center;">
+                    <a style='text-decoration: none; color:black; text-align: center;' href='#'>
+                        <a><strong>No matches found. Try searching again!</strong></a>
+                        <br><i>To view all projects, tap the search button.</i>
+                    </a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td scope="row" style="text-align: center;">
+                    <a style='text-decoration: none; color:black;' href='#'>
+                        There are no projects yet.<br>Select <i class="fa fa-plus fa-sm fa-fw"></i><strong>Project</strong> to create one!
+                    </a>
+                </td>
+            </tr>
+        {% endif %}
+    {% else %}
+        {% for project in projects %}
+        <tr>
+            <td scope="row">
+                <!-- Link each project to its own individual site visits -->
+                {% if sortby == 'la' %}
+                    <a style = "text-decoration: none; color:black;" href="{{ url_for('views.view_all_site_visits', projID = project[0].projectID)  }}">
+                    <!-- Project number -->
+                    <strong> {{project[0].proj_number}} </strong></a>
+
+                    <!-- Last Accessed date -->
+                    <br> Last Accessed: {{project[1].strftime("%b %#d, %Y %#I:%M %p")}}
+                {% else %}
+                    <a style = "text-decoration: none; color:black; line-height: 35px;" href="{{ url_for('views.view_all_site_visits', projID = project.projectID)  }}">
+                    <!-- Project number -->
+                    <strong> {{project.proj_number}} </strong></a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    {% endif %}
+</table>
+
+</div>  
+
+{% endblock content %}
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+{% block edit %}{% endblock %}

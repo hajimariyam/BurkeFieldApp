@@ -1,0 +1,301 @@
+<!-- uses styling, navbar, and footer from base.html -->
+{% extends "base.html" %}
+
+<!-- title & header: client, proj num, site visit date -->
+{% block title %}
+    {{visit_date.strftime("%b %#d, %Y")}} | List
+{% endblock %}
+
+{% block header %}
+<div style="text-align: center;">
+    <a class="header-link" href="{{ url_for('views.view_projects',  client = client, sortby = 'asc' ) }}">
+        <h2 style="margin-bottom: 0em;">
+            <!-- display without client prefixes and only 18 characters max -->
+            {% for prefix in prefixes %}
+                {% if prefix in client %}
+                    {% set name = client.replace(prefix, "") %}
+                    {% if name|length < 18 %}
+                        {{ name }}
+                    {% else %}
+                        {{ name[:18] + '...' }}
+                    {% endif %}
+                {% break %}
+                {% endif %}
+            {% endfor %}
+            {% if "Town of " not in client and "City of " not in client and "County of " not in client and "Village of " not in client %}
+                {% if client|length < 18 %}
+                    {{ client }}
+                {% else %}
+                    {{ client[:18] + '...' }}
+                {% endif %}
+            {% endif %}
+        </h2>
+    </a>
+    <h6 style="margin-bottom: -0.2em; margin-top: 0.2em;">
+        <a class="header-link" href="{{ url_for('views.view_all_site_visits', projID = projID ) }}">
+            {{proj_number}} |
+        </a>
+        <a class="header-link" href="{{ url_for('views.view_site_visit', siteID = sitevisit.sitevisitID, sortby='desc', view='none') }}">
+            {{visit_date.strftime("%b %#d, %Y")}}
+        </a>
+    </h6>
+</div>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet"  href="/static/view_site_visit.css">
+
+<!-- Tab bar -->
+<div>
+    <!-- List view (current) -->
+    <a class="list"><i class="fa fa-list fa-2x fa-fw"></i></a>
+    <!-- Gallery view -->
+    <a class="gallery" href="{{ url_for('views.view_site_visit_photos', siteID = sitevisit.sitevisitID)  }}"><i class="fa fa-th fa-2x fa-fw"></i></a>
+    <!-- Map view -->
+    <a class="map" href="{{ url_for('views.view_site_visit_map', siteID = sitevisit.sitevisitID)  }}"><i class="fa fa-map-marker fa-2x fa-fw"></i></a>
+    <!-- Export feature -->
+    <a class="export" href="{{ url_for('views.export_sitevisit', siteID = sitevisit.sitevisitID)  }}"><i class="fa fa-download fa-2x fa-fw"></i></a>
+</div>
+
+<hr style="margin-top: 4%; box-shadow: 0 0 3px 2px rgb(180, 180, 180);">
+
+<div>
+    <p class="noteHead"><strong><i>Site Visit Notes</i></strong></p>
+</div>
+
+<div id="body" class="body">
+
+    <!-- Site Visit Notes -->
+    <div id="noteOption">
+        <a class="noteOption" style="width: 97%;">
+            {% if sitevisit.notes == None or sitevisit.notes == "" %}
+                <i>{{ "None" }}</i>
+            {% else %}
+                {{ sitevisit.notes }}
+            {% endif %}
+        </a>
+    </div>
+
+    <hr>
+
+    <!-- Featured (flagged) photos -->
+    {% if photoitems|length > 0 %}
+    <p class="photoHeaders"><strong><i>Featured Photos</i></strong></p>
+
+        {% if featuredphotos|length == 0 %}
+            <a></a>
+            <div style="padding: 10px; margin-top: -3%;">
+                <table class="table table-striped">
+                    <tr>
+                        <td scope="row" style="text-align: center;">
+                            <a style='text-decoration: none; color:black;' href='#'>
+                                <i class="fa fa-exclamation-triangle fa-fw"></i> <strong>Flag</strong> photos to feature them!
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        
+        {% else %}
+            {% for photo in featuredphotos %}
+            <div style="clear: left;">
+                <!-- action icon -->
+                {% if photo.is_immediate == True %}
+                    <i class="fa fa-exclamation-triangle fa-2x" id="immediate"> </i>
+                {% elif photo.is_nonimmediate == True %}
+                    <i class="fa fa-exclamation-triangle fa-2x" id="pending"> </i>
+                {% elif photo.is_flagged == True %}
+                    <i class="fa fa-exclamation-triangle fa-2x" id="flagged"> </i>
+                {% endif %}
+                <!-- image -->
+                <a href="{{ url_for('views.view_photo_item', photoID = photo.photoID) }}">
+                    <p style="float: left; width: 33%; margin-left: 5%; margin-bottom: 5%;">
+                        {% set fileString = (photo.filename).split('.jpg') %}
+                        <img src="{{ url_for('views.uploaded_file', filename = fileString[0] ~ '_resized.jpg') }}">
+                    </p>
+                </a>
+                <!-- caption -->
+                <div id="captionFt">
+                    <a class="captionFt col-12">
+                        {% if photo.comment|length >= 100 %}
+                            {{ photo.comment[:100] + "..." }}
+                        {% elif photo.comment|length == 0 %}
+                            <i>None</i>
+                        {% else %}
+                            {{ photo.comment }}
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+
+    <!-- spacing between featured and all photos -->
+    {% if photoitems|length > 0 and featuredphotos|length == 0 %}
+        <hr style="margin-top: -2%;">
+    {% elif photoitems|length == 0 and featuredphotos|length == 0 %}
+        <a></a>
+    {% elif featuredphotos[-1].comment|length > 50 %}
+        <br><br><hr>
+    {% else %}    
+        <br><br><br><br><br><hr>
+    {% endif %}
+
+    <div>
+        <span>
+        <!-- All photos -->
+        <p class="photoHeaders" style="padding-top: 2%;"><strong><i>All Photos</i></strong></p>
+
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Sort By
+            </button>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="{{ url_for('views.view_site_visit', siteID=sitevisit.sitevisitID, sortby='desc', view='none') }}">
+                <i class="fa fa-sort-numeric-desc fa-fw"></i>
+                Newest-Oldest</a>
+            <a class="dropdown-item" href="{{ url_for('views.view_site_visit', siteID=sitevisit.sitevisitID, sortby='asc', view='none') }}">
+                <i class="fa fa-sort-numeric-asc fa-fw"></i>
+                Oldest-Newest</a>
+            </div>
+        </div>
+        </span>
+    </div>
+
+    {% if photoitems | length == 0 %}
+        <div style="padding: 10px;">
+            <table class="table table-striped">
+                <tr>
+                    <td scope="row" style="text-align: center;">
+                        <a style='text-decoration: none; color:black;' href='#'>
+                            There are no photos yet.<br>Select <i class="fa fa-plus fa-sm fa-fw"></i><strong>Photo</strong> to add one!
+                        </a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    {% else %}
+        {% for photo in photoitems %}
+        <div id="eachPhotoItem" style="clear: left;">
+            {% if photo.filename == view %}
+                <table class="table" style="margin-bottom: 2%;">
+                    <tr>
+                        <td class="imgAnimation" scope="row" id="new_photo" style="border-bottom: none;">
+                            <!-- image -->
+                            <a href="{{ url_for('views.view_photo_item', photoID = photo.photoID) }}">
+                                <p style="float: left; width: 33%; margin-left: 3%;">
+                                    {% set fileString = (photo.filename).split('.jpg') %}
+                                    <img style="margin-bottom: -10%; padding-bottom: 0% !important;" src="{{ url_for('views.uploaded_file', filename = fileString[0] ~ '_resized.jpg') }}">
+                                </p>
+                            </a>
+                            <!-- caption -->
+                            <div id="captionAll">
+                                <a class="captionAll col-12" id="captAnimation">
+                                    {% if photo.comment|length >= 100 %}
+                                        {{ photo.comment[:100] + "..." }}
+                                    {% elif photo.comment|length == 0 %}
+                                        <i>None</i>  
+                                    {% else %}
+                                        {{ photo.comment }}
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <script>
+                    var element = document.getElementById("new_photo");
+                    element.scrollIntoView();
+                    element.scrollIntoView(true);
+                    element.scrollIntoView({block: "end"});
+                    element.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+                </script>
+            {% else %}
+                <!-- image -->
+                <a href="{{ url_for('views.view_photo_item', photoID = photo.photoID) }}">
+                    <p style="float: left; width: 33%; margin-left: 5%;">
+                        {% set fileString = (photo.filename).split('.jpg') %}
+                        <img src="{{ url_for('views.uploaded_file', filename = fileString[0] ~ '_resized.jpg') }}">
+                    </p>
+                </a>
+                <!-- caption -->
+                <div id="captionAll">
+                    <a class="captionAll col-12">
+                        {% if photo.comment|length >= 100 %}
+                            {{ photo.comment[:100] + "..." }}
+                        {% elif photo.comment|length == 0 %}
+                            <i>None</i>  
+                        {% else %}
+                            {{ photo.comment }}
+                        {% endif %}
+                    </a>
+                </div>
+            {% endif %}  
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if photoitems|length == 0 or photoitems[-1].comment|length < 10 %}
+        <br><br><br><br><br><br>
+    {% else %}
+        <br><br><br><br>
+    {% endif %}
+
+</div>
+<br>
+
+<script>
+    const isIOS = 
+        navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
+        navigator.userAgent.match(/AppleWebKit/);
+
+    function init() {
+        if (!isIOS) {
+            window.addEventListener("deviceorientationabsolute", handler, true);
+        }
+    }
+
+    function startCompass() {
+        if (isIOS) {
+            DeviceOrientationEvent.requestPermission()
+            .then((response) => {
+                if (response === "granted") {
+                window.addEventListener("deviceorientation", handler, true);
+                } else {
+                alert("has to be allowed!");
+                }
+            })
+            .catch(() => alert("not supported"));
+        }
+    }
+
+    function handler(e) {
+        compass = e.webkitCompassHeading || Math.abs(e.alpha - 360);
+        var degreeVal = document.getElementById("orientation");
+        degreeVal.value = compass;
+    }
+
+    window.onload = init();
+
+</script>
+
+{% endblock content %}
+
+<!-- edit site visit -->
+{% block edit %}
+<a href="{{ url_for('views.edit_site_visit', siteID = sitevisit.sitevisitID ) }}" style="text-decoration: none; color: white;">
+  <button type="button" class="editbtn border-0"><i class="fa fa-pencil-square-o fa-sm fa-fw" aria-hidden="true"></i> Visit</button>
+</a>
+{% endblock %}
+
+<!-- create new photo item for current site visit -->
+{% block add %}
+<form method=post enctype=multipart/form-data>
+    <label onclick="startCompass()" class="addbtn border-0 btn btn-primary"><i class="fa fa-plus fa-sm fa-fw"></i> Photo
+        <input class="addphotofile" accept="image/*" type=file
+        onchange="this.form.submit()" name=file style="display: none;"><br><br>
+        <input type="text" id="orientation" name="orientation" hidden='true'>
+    </label>
+</form>
+{% endblock %}

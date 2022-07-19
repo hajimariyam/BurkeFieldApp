@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{visit_date.strftime("%b %#d, %Y")}} | Map
+{% endblock %}
+
+{% block header %}
+<div style="text-align: center;">
+  <a class="header-link" href="{{ url_for('views.view_projects',  client = client, sortby = 'asc' ) }}">
+      <h2 style="margin-bottom: 0em;">
+        {% for prefix in prefixes %}
+            {% if prefix in client %}
+                {% set name = client.replace(prefix, "") %}
+                {% if name|length < 18 %}
+                    {{ name }}
+                {% else %}
+                    {{ name[:18] + '...' }}
+                {% endif %}
+            {% break %}
+            {% endif %}
+        {% endfor %}
+        {% if "Town of " not in client and "City of " not in client and "County of " not in client and "Village of " not in client %}
+            {% if client|length < 18 %}
+                {{ client }}
+            {% else %}
+                {{ client[:18] + '...' }}
+            {% endif %}
+        {% endif %}
+      </h2>
+  </a>
+  <h6 style="margin-bottom: -0.2em; margin-top: 0.2em;">
+      <a class="header-link" href="{{ url_for('views.view_all_site_visits', projID = projID ) }}">
+          {{proj_number}} |
+      </a>
+      <a class="header-link" href="{{ url_for('views.view_site_visit', siteID = sitevisit.sitevisitID, sortby='desc', view='none' ) }}">
+          {{visit_date.strftime("%b %#d, %Y")}}
+      </a>
+  </h6>
+</div>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/view_site_visit_map.css">
+
+<!-- Tab bar -->
+<div>
+  <!-- List view (current) -->
+  <a class="list" href="{{ url_for('views.view_site_visit', siteID = sitevisit.sitevisitID, sortby = 'desc', view='none')  }}"><i class="fa fa-list fa-2x fa-fw"></i></a>
+  <!-- Gallery view -->
+  <a class="gallery" href="{{ url_for('views.view_site_visit_photos', siteID = sitevisit.sitevisitID)  }}"><i class="fa fa-th fa-2x fa-fw"></i></a>
+  <!-- Map view -->
+  <a class="map"><i class="fa fa-map-marker fa-2x fa-fw"></i></a>
+  <!-- Export feature -->
+  <a class="export" href="{{ url_for('views.export_sitevisit', siteID = sitevisit.sitevisitID)  }}"><i class="fa fa-download fa-2x fa-fw"></i></a>
+</div>
+
+<hr style="margin-top: 0%; box-shadow: 0 0 3px 2px rgb(180, 180, 180);">
+
+<script>var photos = {{ photos|safe }}</script>
+
+<div class="container buttons">
+  <button type="button" id="location" onclick="showCurrentLocation()" class="btn btn-info shadow-none">Current Location</button>
+  <button type="button" id="project" onclick ="showProject()" class="btn btn-info shadow-none">Project</button>
+  <button type="button" id="reset" onclick="reset()" class="btn btn-info shadow-none">Reset</button>
+</div>
+
+<!-- Embedded interactive map of all photos and current location -->
+<div class = "container" style="width: 100vw; height: 65vh; margin-bottom: 4.0em; max-width: 1000px;" id="mapContainer"></div>
+<script>
+  // Initialize the platform object:
+  var platform = new H.service.Platform({
+    'apikey': '{{apikey}}'
+  });
+
+  const geocoderService = platform.getGeocodingService();
+  var locationMarker;
+  const lat = {{lat}};
+  const lon = {{lon}};
+  var userLat;
+  var userLon;
+  
+  // Obtain the default map types from the platform object   
+  var defaultLayers = platform.createDefaultLayers();
+
+  // Instantiate (and display) a map object:
+  var map = new H.Map(
+    document.getElementById('mapContainer'),
+    defaultLayers.vector.normal.map,
+    {
+      zoom: 16,
+      center: { lat: lat, lng: lon },
+      padding: {top:50, left:50, bottom:50, right:50}
+  });
+
+  // Instantiate the default behavior, providing the mapEvents objects:
+  var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+  var ui = H.ui.UI.createDefault(map, defaultLayers);
+  const markers = [];
+  const allCoords = [];
+
+  // check for overlapping positions
+  for (var index = 0; index < photos.length; index++) {
+    thisPosition = [photos[index].latitude, photos[index].longitude];
+    var newLat, newLon, count = 0;
+    for (var i = 0; i < allCoords.length; i++) {
+      if (allCoords[i][0] == thisPosition[0] && allCoords[i][1] == thisPosition[1])
+        count++;
+    }
+
+    allCoords[index] = thisPosition;
+    const fileString = (photos[index].filename).split('.jpg');
+
+    switch(count) {
+      case 1:
+        newLat = photos[index].latitude + 0.00000624690959;
+        newLon = photos[index].longitude + 0.00000624690959;
+        break;
+      case 2:
+        newLat = photos[index].latitude - 0.00000624690959;
+        newLon = photos[index].longitude + 0.00000624690959;
+        break;
+      case 3:
+        newLat = photos[index].latitude + 0.00000624690959;
+        newLon = photos[index].longitude - 0.00000624690959;
+        break;
+      case 4:
+        newLat = photos[index].latitude - 0.00000624690959;
+        newLon = photos[index].longitude - 0.00000624690959;
+        break;
+      default:
+        // if there is five or more duplicate position photos, OR no dups
+        // do not show the multiple photos
+        newLat = photos[index].latitude;
+        newLon = photos[index].longitude;
+    }
+
+    var curicon = '<img onclick="viewphoto(' + photos[index].photoID + ')"' + 'style="width:40px; cursor:pointer; height:40px; border-radius: 25px;" src="/static/uploads/' + fileString[0] + '_resized.jpg' + '"/>';
+    var icon = new H.map.DomIcon(curicon),
+        coords = {lat: newLat, lng: newLon},
+        photomarker = new H.map.DomMarker(coords, {icon: icon});
+    map.addObject(photomarker);
+    markers[index] = photomarker;
+
+    var domIconElement = document.createElement('div');
+    domIconElement.setAttribute('data-degree', photos[index].orientation);
+
+    // set the anchor using margin css property depending on the content's (svg element below) size
+    // to make sure that the icon's center represents the marker's geo positon
+    domIconElement.style.margin = '-30px 0 0 -30px'; 
+
+    // add content to the element
+    domIconElement.innerHTML = '<svg width="100px" height="100px" viewBox="0 0 100 100"><circle cx="50" cy="50" r="3" style="fill: black;"/><g id="arrow" style="stroke: black;"><line x1="60" y1="50" x2="75" y2="50"/><polygon points="78 50, 70 45, 70 55"/></g><use xlink:href="#arrow" transform="rotate(0, 0, 0)"/></svg>';
+
+    // create dom marker and add it to the map
+    marker = map.addObject(new H.map.DomMarker({lat: newLat, lng: newLon}, {
+      icon: new H.map.DomIcon(domIconElement, {
+        onAttach: function(clonedElement, domIcon, domMarker) {
+          var clonedContent = clonedElement.getElementsByTagName('svg')[0];
+          var degree = clonedElement.getAttribute('data-degree') - 90;
+          if (degree < 0) {
+            degree = degree + 360;
+          }
+          // set last used value for rotation when dom icon is attached (back in map's viewport)
+          clonedContent.style.transform = 'rotate(' + degree + 'deg)';
+        }
+      })
+    }));
+  }
+
+  function viewphoto(photoID) {
+    window.location.href= "{{ url_for('views.view_photo_item', photoID = 'tmp') }}".replace("tmp", photoID);
+  }
+
+  // Get the current location via HTML Geolocation
+  function getLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(showPosition);
+    } else { 
+      x.innerHTML = "Geolocation is not supported by this browser.";
+    }
+  }
+
+  // Get current location and display onto map
+  function showPosition(position) {
+    geocoderService.reverseGeocode(
+      {
+        mode: "retrieveAddress",
+        maxresults: 1,
+        prox: position.coords.latitude + "," + position.coords.longitude
+      },
+      success => {
+        console.log(success.Response);
+        var curicon = '<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" height="24" width="24" version="1.1">' +
+                    '<g transform="translate(0 -1028.4)">' +
+                    '<path d="m12 0c-4.4183 2.3685e-15 -8 3.5817-8 8 0 1.421 0.3816 2.75 1.0312 3.906 0.1079 0.192 0.221 0.381 0.3438 0.563l6.625 11.531 6.625-11.531c0.102-0.151 0.19-0.311 0.281-0.469l0.063-0.094c0.649-1.156 1.031-2.485 1.031-3.906 0-4.4183-3.582-8-8-8zm0 4c2.209 0 4 1.7909 4 4 0 2.209-1.791 4-4 4-2.2091 0-4-1.791-4-4 0-2.2091 1.7909-4 4-4z" transform="translate(0 1028.4)" fill="#e74c3c"/>' +
+                    '<path d="m12 3c-2.7614 0-5 2.2386-5 5 0 2.761 2.2386 5 5 5 2.761 0 5-2.239 5-5 0-2.7614-2.239-5-5-5zm0 2c1.657 0 3 1.3431 3 3s-1.343 3-3 3-3-1.3431-3-3 1.343-3 3-3z" transform="translate(0 1028.4)" fill="#c0392b"/>' +
+                    '</g></svg>'
+        var icon = new H.map.Icon(curicon),
+          coords = {lat: position.coords.latitude, lng: position.coords.longitude},
+          mylocation = new H.map.Marker(coords, {icon: icon});
+        map.addObject(mylocation);
+        locationMarker = mylocation;
+
+        allgroup = new H.map.Group();
+        allgroup.addObjects(markers);
+        allgroup.addObject(mylocation);
+        map.addObject(allgroup);
+
+        map.getViewModel().setLookAtData({
+          bounds: allgroup.getBoundingBox()
+        });
+
+        userLat = position.coords.latitude;
+        userLon = position.coords.longitude;
+      },
+      error => {
+        console.error(error);
+      }
+    )
+  }
+
+  function showCurrentLocation() {
+    map.setCenter({lat: userLat, lng: userLon});
+    map.setZoom(18);
+  }
+
+  function showProject() {
+    group = new H.map.Group();
+    group.addObjects(markers);
+    map.addObject(group);
+
+    map.getViewModel().setLookAtData({
+      bounds: group.getBoundingBox()
+    });
+
+  }
+
+  function reset() {
+    location.reload();
+  }
+
+  window.onload = getLocation();
+  window.addEventListener('resize', 
+	  () => map.getViewPort().resize());
+</script>
+</div>
+
+<script>
+  const isIOS = 
+      navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
+      navigator.userAgent.match(/AppleWebKit/);
+
+  function init() {
+      if (!isIOS) {
+          window.addEventListener("deviceorientationabsolute", handler, true);
+      }
+  }
+
+  function startCompass() {
+      if (isIOS) {
+          DeviceOrientationEvent.requestPermission()
+          .then((response) => {
+              if (response === "granted") {
+              window.addEventListener("deviceorientation", handler, true);
+              } else {
+              alert("has to be allowed!");
+              }
+          })
+          .catch(() => alert("not supported"));
+      }
+  }
+
+  function handler(e) {
+      compass = e.webkitCompassHeading || Math.abs(e.alpha - 360);
+      var degreeVal = document.getElementById("orientation");
+      degreeVal.value = compass;
+  }
+
+  window.onload = init();
+
+</script>
+
+{% endblock %}
+
+<!-- edit site visit -->
+{% block edit %}
+<a href="{{ url_for('views.edit_site_visit', siteID = sitevisit.sitevisitID ) }}" style="text-decoration: none; color: white;">
+    <button type="button" class="editbtn border-0"><i class="fa fa-pencil-square-o fa-sm fa-fw" aria-hidden="true"></i> Visit</button>
+</a>
+{% endblock %}
+
+<!-- create new photo item for current site visit -->
+{% block add %}
+<form method=post enctype=multipart/form-data>
+    <label onclick="startCompass()" class="addbtn border-0 btn btn-primary"><i class="fa fa-plus fa-sm fa-fw"></i> Photo
+        <input class="addphotofile" accept="image/*" type=file 
+        onchange="this.form.submit()" name=file style="display: none;"><br><br>
+        <input type="text" id="orientation" name="orientation" hidden='true'>
+    </label>
+</form>
+{% endblock %}    

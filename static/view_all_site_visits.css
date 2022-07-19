@@ -1,0 +1,96 @@
+/* Header links */
+.header-link {
+    color: white !important;
+    text-decoration: none;
+}
+
+/* Tab bar */
+.list{
+    float: left;
+    color: #00838F;
+    border-bottom: 5px solid #00838F;
+    font-size: 14px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    font-weight: 400;
+    margin-top: 5%;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.calendar{
+    display: inline-block;
+    color: gray;
+    font-size: 14px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    font-weight: 400;
+    margin-left: 5%;
+    margin-top: 5%;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.export{
+    float: right;
+    color: gray;
+    font-size: 16px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    font-weight: 400;
+    margin-top: 5%;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.fa-list {
+    margin-bottom: 35% !important;
+}
+
+.list:hover, .list:active {
+    color: #00838F;
+}
+
+.calendar:hover, .calendar:active, .export:hover, .export:active {
+    color: gray;
+}
+
+/* Table */
+#tablewrap{
+    margin-top: -3%;
+    padding:10px;
+    padding-bottom: 2.5rem;
+}  
+
+/* Total flagged photos */
+#actionicon {
+    float: right;
+    padding-right: 2%;
+}
+
+.numitems {
+    float: right;
+    color: black;
+    text-decoration: none;
+    font-family: sans-serif;
+    font-size: 0.8em;
+    margin-top: 25%;
+    margin-right: 30%;
+}
+
+/* Add visit button in footer */
+.addbtn{
+    background-color: #00838F;
+    border-color: #00838F;
+    color: white;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 5px;
+    padding-right: 5%;
+    height: 2.0em;
+    padding: none !important;
+    font-size: 1.15em;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{proj_number}} | Site Visits
+{% endblock %}
+
+{% block header %}
+<div style="text-align: center;">
+    <a class="header-link" href="{{ url_for('views.view_projects',  client = client, sortby = 'asc' ) }}">
+        <h2 style="margin-bottom: 0em;">
+            <!-- display without client prefixes and only 18 characters max -->
+            {% for prefix in prefixes %}
+                {% if prefix in client %}
+                    {% set name = client.replace(prefix, "") %}
+                    {% if name|length < 18 %}
+                        {{ name }}
+                    {% else %}
+                        {{ name[:18] + '...' }}
+                    {% endif %}
+                {% break %}
+                {% endif %}
+            {% endfor %}
+            {% if "Town of " not in client and "City of " not in client and "County of " not in client and "Village of " not in client %}
+                {% if client|length < 18 %}
+                    {{ client }}
+                {% else %}
+                    {{ client[:18] + '...' }}
+                {% endif %}
+            {% endif %}
+        </h2>
+    </a>
+    <h6 style="margin-bottom: -0.2em; margin-top: 0.2em;">
+        {{proj_number}}
+    </h6>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"  href="/static/view_all_site_visits.css">
+
+<!-- Tab bar -->
+<div>
+    <!-- List view (current) -->
+    <a class="list"><i class="fa fa-list fa-2x fa-fw"></i></a>
+    <!-- Calendar view -->
+    <a class="calendar" href="{{ url_for('views.calendar', projID = projID) }}"><i class="fa fa-calendar fa-2x fa-fw"></i></a>
+    <!-- Export feature -->
+    <a class="export" href="{{ url_for('views.export_project', projID = projID) }}"><i class="fa fa-download fa-2x fa-fw"></i></a>
+</div>
+
+<hr style="box-shadow: 0 0 3px 2px rgb(180, 180, 180);">
+
+<!-- Data table -->
+<div id="tablewrap">
+    <table class="table table-striped">
+        <tbody>
+            {% if sitevisits|length == 0 %}
+                <tr>
+                    <td scope="row" style="text-align: center;">
+                        <a style='text-decoration: none; color:black;' href='#'>
+                            There are no site visits yet.<br>Select <i class="fa fa-plus fa-sm fa-fw"></i><strong>Visit</strong> to create one!</a>
+                    </td>
+                </tr>
+            {% else %}
+                {% for sitevisit in sitevisits %}
+                    <tr>
+                        <td scope="row">
+                            <!-- Date -->
+                            <a style="text-decoration: none; color:black;" href="{{ url_for('views.view_site_visit', siteID = sitevisit.sitevisitID, sortby='desc', view='none') }}">
+                                <strong> {{ sitevisit.date.strftime("%b %#d, %Y") }} </strong>
+                            </a>
+                            <br>
+                            <!-- Notes -->
+                            {% if sitevisit.notes == None or sitevisit.notes == "" %}
+                                <i>None</i>
+                            {% elif sitevisit.notes|length >= 125 %}
+                                {{ sitevisit.notes[:125] + "..." }}
+                            {% else %}
+                                {{ sitevisit.notes }}
+                            {% endif %}
+                            <!-- Total # action items -->
+                            {% if items_dct[sitevisit.date] == 0 %}
+                            {% else %}
+                                <i class="fa fa-exclamation-triangle fa-lg" id="actionicon" ><br>
+                                <p class="numitems">
+                                {{ items_dct[sitevisit.date] }}
+                                </p></i>
+                            {% endif %}
+                            <br>
+                            <!-- Total # photos, get value where key=sitevisitID -->
+                            {% if total_photos[sitevisit.sitevisitID] == 1 %}
+                            <em> {{ total_photos[sitevisit.sitevisitID] }} photo </em>
+                            {% else %}
+                            <em> {{ total_photos[sitevisit.sitevisitID] }} photos </em>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const isIOS = 
+        navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
+        navigator.userAgent.match(/AppleWebKit/);
+
+    function init() {
+        if (!isIOS) {
+            window.addEventListener("deviceorientationabsolute", handler, true);
+        }
+    }
+
+    function startCompass() {
+        if (isIOS) {
+            DeviceOrientationEvent.requestPermission()
+            .then((response) => {
+                if (response === "granted") {
+                window.addEventListener("deviceorientation", handler, true);
+                } else {
+                alert("has to be allowed!");
+                }
+            })
+            .catch(() => alert("not supported"));
+        }
+    }
+
+    function handler(e) {
+        compass = e.webkitCompassHeading || Math.abs(e.alpha - 360);
+        var degreeVal = document.getElementById("orientation");
+        degreeVal.value = compass;
+    }
+
+    window.onload = init();
+
+</script>
+
+{% endblock content %}
+
+<!-- Edit project -->
+{% block edit %}
+<a href="{{ url_for('views.edit_project', projID = projID)  }}" style="text-decoration: none; color: white;">
+  <button type="button" class="editbtn border-0"><i class="fa fa-pencil-square-o fa-sm fa-fw" aria-hidden="true"></i> Project</button>
+</a>
+{% endblock %}
+
+<!-- Create new site visit if none exist for today, else add new photo to today's visit -->
+{% block add %}
+<form method=post enctype=multipart/form-data>
+  <label onclick="startCompass()" class="addbtn border-0 btn btn-primary"><i class="fa fa-plus fa-sm fa-fw"></i> Visit
+      <input class="addphotofile" accept="image/*" type=file 
+      onchange="this.form.submit()" name=file style="display: none;"><br><br>
+      <input type="text" id="orientation" name="orientation" hidden='true'>
+  </label>
+</form>
+
+{% endblock %}

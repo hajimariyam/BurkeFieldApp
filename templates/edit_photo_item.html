@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{visit_date.strftime("%b %#d, %Y")}} | Edit Photo
+{% endblock %}
+
+{% block header %}
+<div style="text-align: center;">
+  <a class="header-link" href="{{ url_for('views.view_projects',  client = client, sortby = 'asc' ) }}">
+      <h2 style="margin-bottom: 0em;">
+        <!-- display without client prefixes and only 18 characters max -->
+        {% for prefix in prefixes %}
+            {% if prefix in client %}
+                {% set name = client.replace(prefix, "") %}
+                {% if name|length < 18 %}
+                    {{ name }}
+                {% else %}
+                    {{ name[:18] + '...' }}
+                {% endif %}
+            {% break %}
+            {% endif %}
+        {% endfor %}
+        {% if "Town of " not in client and "City of " not in client and "County of " not in client and "Village of " not in client %}
+            {% if client|length < 18 %}
+                {{ client }}
+            {% else %}
+                {{ client[:18] + '...' }}
+            {% endif %}
+        {% endif %}
+      </h2>
+  </a>
+  <h6 style="margin-bottom: -0.2em; margin-top: 0.2em;">
+      <a class="header-link" href="{{ url_for('views.view_all_site_visits', projID = projID ) }}">
+          {{proj_number}} |
+      </a>
+      <a class="header-link" href="{{ url_for('views.view_site_visit', siteID = siteID, sortby='desc', view='none' ) }}">
+          {{visit_date.strftime("%b %#d, %Y")}}
+      </a>
+  </h6>
+</div>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/edit_photo_item.css"><br>
+
+<!-- Delete photo -->
+<div class="delete">
+  <a href="{{ url_for('views.delete_photo_item', id = photoitem.photoID, page = 'view') }}" onclick="return confirm('Are you sure you want to delete this photo item?')"
+    class=" btn btn-danger btn-xs" style="float: right; background-color: rgba(194, 5, 5, 0.753) !important;"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i> Photo</a>
+</div>
+
+<div id="body" class="body">
+
+    <!-- Photo upload time -->
+    <p class="time">{{photoitem.time.strftime("%#I:%M %p")}}</p>
+
+    <!-- Image -->
+    <img class="image" src="{{ url_for('views.uploaded_file', filename = photoitem.filename) }}">
+
+    <br>
+
+    <!-- Flagging option dropdown menu; onchange command maintains color of dropdown option -->
+    <p class="titles"><strong><i>Action Required?</i></strong></p>
+
+    <div class="dropdown">
+        <!-- Display current flagged status as dropdown default -->
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {% if photoitem.is_immediate == True %}
+              <a><i class="fa fa-exclamation-triangle fa-fw" id="immediate"></i> Immediate Attention Required</a>
+          {% elif photoitem.is_nonimmediate == True %}
+              <a><i class="fa fa-exclamation-triangle fa-fw" id="pending"></i> Non-immediate / Pending</a>
+          {% elif photoitem.is_flagged == True %}
+              <a><i class="fa fa-exclamation-triangle fa-fw" id="flagged"></i> Flagged Item</a>
+          {% else %}
+              <i>Default = None</i>
+          {% endif %}
+        </button>
+
+        <!-- Edit flagged status -->
+        <div class="dropdown-menu" aria-labelledby="dropdownMenu2" style="margin-top: 1%;">
+          <button class="dropdown-item" id="na" type="button" onclick="$('#dropdownMenu2').html(document.getElementById('na').innerHTML); document.getElementById('tmp').value = 'None'">
+            <i class="fa fa-exclamation-triangle" id="none" aria-hidden="true"></i> None</button>
+          <button class="dropdown-item" id="im" type="button" onclick="$('#dropdownMenu2').html(document.getElementById('im').innerHTML); document.getElementById('tmp').value = 'is_immediate'">
+            <i class="fa fa-exclamation-triangle" id="immediate" aria-hidden="true"></i> Immediate Attention Required</button>
+          <button class="dropdown-item" id="nonim" type="button" onclick="$('#dropdownMenu2').html(document.getElementById('nonim').innerHTML); document.getElementById('tmp').value = 'is_nonimmediate'">
+            <i class="fa fa-exclamation-triangle" id="pending" aria-hidden="true"></i> Non-immediate / Pending</button>
+          <button class="dropdown-item" id="flag" type="button" onclick="$('#dropdownMenu2').html(document.getElementById('flag').innerHTML); document.getElementById('tmp').value = 'is_flagged'">
+            <i class="fa fa-exclamation-triangle" id="flagged" aria-hidden="true"></i> Flagged Item</button>
+        </div>
+    </div>
+
+    <!-- Input flagged status for form submission -->
+    <input id="tmp" type="text" form="editphotoitem" name="action" hidden="true"></input>
+
+    <!-- Edit caption -->
+    <p class="titles"><strong><i>Caption</i></strong></p>
+
+    <div id="caption">
+      <textarea class="captiontext" type="text" form="editphotoitem" name="comment" placeholder="Add photo caption...">{{ photoitem.comment }}</textarea>
+    </div>
+
+    <br><br><br><br><br>
+
+</div>
+
+{% endblock content %}
+
+<!-- Cancel button -->
+{% block edit %}
+<a style="text-decoration: none; color: white;">
+  <button type="button" onclick="history.back()" class="editbtn border-0"><i class="fa fa-close fa-sm fa-fw" aria-hidden="true"></i> Cancel</button>
+</a>
+{% endblock %}
+
+<!-- Save button -->
+{% block add %}
+<form action="{{ url_for('views.save_photo_item', photoID = photoitem.photoID) }}" method="POST" id="editphotoitem">
+    <input class="addbtn border-0 btn btn-primary" type="submit">
+    <button class="addbtn border-0 btn btn-primary" type="submit">
+      <i class="fa fa-check fa-sm fa-fw" aria-hidden="true"></i> Save
+    </button>
+</form>
+{% endblock %} 

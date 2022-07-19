@@ -1,0 +1,32 @@
+/* Body headers */
+.homeTitles {
+    text-indent: 10px;
+    color: #00838F;
+    font-size: 22px; 
+    margin-top: 10px;
+}
+
+/* Location / Loading */
+.locationTitle {
+    text-indent: 10px;
+    color: #00838F;
+    font-size: 1.0em;
+    line-height: 0 !important;
+    padding-bottom: 5%;
+}
+
+/* Address book */
+.clientbtn {
+    background-color: white;
+    color: #00838F !important;
+    float: right;
+    margin-top: 3%;
+    padding-bottom: 3%;
+    padding-right: 3%;
+}
+
+
+#body {
+    padding:10px;
+    padding-bottom: 3rem;
+}

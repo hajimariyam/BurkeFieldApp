@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+        <!-- Font Awesome CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    
+        <title>{% block title %}401 Error{% endblock %}</title>
+
+        <!-- Linked Stylesheets from base -->
+        <link rel="stylesheet"  href="/static/base.css">
+        <link rel="shortcut icon" type="image/x-icon" href="static/img/favicon.ico" />
+    </head>
+
+    <body>        
+        <link rel="stylesheet"  href="static/error.css">
+        <div id="error">
+            <div class="container justify-content-center align-items-center">
+                <!-- Sign in with Microsoft-->
+                <div class="logo justify-content-center align-items-center">
+                    <!-- CBBEL Logo -->
+                    <img class="img-center" src="http://cbbel.com/wp-content/themes/cbbel/img/logo-mobile.gif"><br><br><br><br>
+                    <div class="msg justify-content-center align-items-center">
+                        <a style="color: #58585b; font-size: x-large; font-weight: bolder; letter-spacing: 3px;">No authorization found</a>
+                        <br>
+                        <a style="color: #58585b; font-size: large; font-weight: 450; letter-spacing: 1px; font-style: oblique;">This page is not publicly available.</a>
+                        <br><br>
+                        <a style="color: #58585b; font-size: large; font-weight: 450; letter-spacing: 1px;">Please login for access.</a>
+                        <br><br><br><br><br>
+                        <div class="btn btn-info btn-md" style="width: 300px; height: 50px;">
+                            <a href=/login style="font-size: 16pt; font-weight: 500; color: white; text-decoration: none;">Sign in</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br><br><br><br>
+            <div class="txt">
+                <p class="num" style="margin-top: -5%; font-size: 200pt; opacity: 15%; color: #00838F;">401</p>
+            </div>
+        </div>
+    </body>
+
+</html>

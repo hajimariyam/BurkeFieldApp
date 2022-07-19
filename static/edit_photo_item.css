@@ -1,0 +1,133 @@
+/* Header links */
+.header-link {
+    text-decoration: none;
+    color: white !important;
+}
+
+/* Time */
+.time {
+    float: left;
+    font-size: 18px;
+    font-weight: bold;
+    color: rgb(100, 100, 100);
+    padding-left: 15%;
+    padding-bottom: 1%;
+}
+
+/* Delete button */
+.delete {
+    margin-top: -2%;
+    padding-right: 5%;
+    padding-bottom: 2%;
+}
+
+/* Photo */
+.image {
+    text-align: center;
+    width:100%;
+    height: 100%;
+}
+
+/* Headers */
+.titles {
+    text-align: left;
+    color: #00838F;
+    font-size: 22px; 
+    padding-top: 0%;
+    padding-left: 5%;
+    margin-top: 7%;
+}
+
+/* Dropdown menu & action icons */
+.dropdown{
+    padding-left: 8%;
+}
+
+.dropdown-menu {
+    width: 84%;
+    box-shadow: 5px 5px 5px rgb(180, 180, 180);
+}
+
+.btn-secondary.dropdown-toggle {
+    border-color: rgb(150, 150, 150);
+}
+
+#dropdownMenu2 {
+    background-color: white !important;
+    color: black !important;
+    width: 91%;
+}
+
+.dropdown-item {
+    padding-top: 1%;
+    padding-bottom: 3%;
+    padding-left: 5%;
+}
+
+.dropdown-item:focus, .dropdown-item:hover {
+    background-color: white !important;
+}
+
+#immediate {
+    color: rgb(230, 24, 24);
+}
+
+#pending {
+    color: #e3e632ce;
+}
+
+#flagged {
+    color: #00838F;
+}
+
+#none {
+    color: white;
+}
+
+/* Caption */
+textarea {
+    width: 97%;
+    height: 200px;
+    outline: none;
+    border-radius: 5px;
+    background-color: white;
+    border-color: rgb(150, 150, 150);
+}
+
+textarea:focus, textarea:active {
+    box-shadow: 0 0 3px 2px rgb(180, 180, 180);
+}
+
+.captiontext {
+    text-decoration: none;
+    color: black;
+    text-align: left;
+    padding: 5%;
+}
+
+#caption {
+    padding-left: 8%;
+    padding-right: 5%;
+    border-width: 2px;
+}
+
+/* Save button in footer */
+.addbtn{
+    background-color: #00838F;
+    border-color: #00838F;
+    color: white;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 5px;
+    padding-right: 5%;
+    height: 2.0em;
+    padding: none !important;
+    font-size: 1.15em;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+}
+
+.addbtn:focus, .addbtn:active {
+    box-shadow: none !important;
+}

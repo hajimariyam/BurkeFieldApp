@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Clients{% endblock %}
+{% block header %}Clients{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="/static/view_clients.css">
+
+<div id="body"> 
+
+<!-- Search Bar -->
+<form method="POST">
+    <div class="input-group">
+        <input class="form-control" type="text" placeholder="Search clients..." autofocus="autofocus" name="search_string">
+        <span class="input-group-text">
+            <!-- Search button -->
+            <button type="submit" formaction="{{ url_for('views.view_clients', sortby='az') }}" value="Search"
+            style="background-color: #00838F; color: white;" class="btn">
+            <i class="fa fa-search"></i>
+            </button>
+            <!-- Sort By button -->
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" 
+            aria-haspopup="true" aria-expanded="false" style="margin-left: 0.5em;">
+                Sort By
+            </button>
+            <!-- Sort By dropdown menu -->
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <!-- linked to view_clients function in views.py with "az" parameter for alphabetical order -->
+                <a class="dropdown-item" href="{{ url_for('views.view_clients', sortby='az') }}">
+                    <i class="fa fa-sort-alpha-asc fa-fw"></i>
+                    Clients (A-Z)</a>
+                <!-- linked to view_clients function in views.py with "za" parameter for reverse alphabetical order -->
+                <a class="dropdown-item" href="{{ url_for('views.view_clients', sortby='za') }}">
+                    <i class="fa fa-sort-alpha-desc fa-fw"></i>
+                    Clients (Z-A)</a>
+                <!-- linked to view_clients function in views.py with "la" parameter for order of last accessed -->
+                <a class="dropdown-item" href="{{ url_for('views.view_clients', sortby='la') }}">
+                    <i class="fa fa-clock-o fa-fw"></i>
+                    Last Accessed</a>
+            </div>
+        </span>
+    </div>    
+</form>
+
+<!-- Data table -->
+<table class="table table-striped" style="margin-top: 5%;">
+    {% if clients|length == 0 %}
+        {% if sortby == 'la' %}
+            <tr>
+                <td scope="row" style="text-align: center;">
+                    <a style='text-decoration: none; color:black;' href='#'>
+                        You haven't viewed any clients yet.<br>Sort by 
+                        <a><i class="fa fa-sort-alpha-asc fa-fw"></i><strong> Clients (A-Z)</strong> to begin!</a>
+                    </a>
+                </td>
+            </tr>
+        {% elif search|length > 0 %}
+            <tr>
+                <td scope="row" style="text-align: center;">
+                    <a style='text-decoration: none; color:black; text-align: center;' href='#'>
+                        <a><strong>No matches found. Try searching again!</strong></a>
+                        <br><i>To view all clients, tap the search button.</i>
+                    </a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td scope="row" style="text-align: center;">
+                    <a style='text-decoration: none; color:black;' href='#'>
+                        There are no clients yet.<br>Select <i class="fa fa-plus fa-sm fa-fw"></i><strong>Project</strong> to add one!
+                    </a>
+                </td>
+            </tr>
+        {% endif %}
+    {% else %}
+        {% for x in clients %}
+            <tr>
+                <td scope="row">
+                    <!-- Link each client to its projects -->
+                    {% if sortby == 'la' %}
+                    <a style = "text-decoration: none; color:black;" href="{{ url_for('views.view_projects', sortby='asc', client=x[0].client)  }}">
+                        <!-- Client name -->
+                        <strong> {{x[0].client}} </strong></a>
+                        <!-- Last Accessed date -->
+                        <br> Last Accessed: {{x[1].strftime("%b %#d, %Y %#I:%M %p")}}
+                        
+                    {% else %}
+                    <a style = "text-decoration: none; color:black; line-height: 35px;" href="{{ url_for('views.view_projects', sortby='asc', client=x[0])  }}">
+                        <!-- Client name -->
+                        <strong> {{x[0]}} </strong></a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    {% endif %}
+</table>
+
+</div>
+
+{% endblock content %}
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+{% block edit %}{% endblock %}

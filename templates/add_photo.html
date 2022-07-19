@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %} Add Photo {% endblock %}
+{% block header %} Add Photo {% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"  href="/static/add_photo.css">
+
+<div id="body" class="body">
+    <!-- Image -->
+    <img class="image" src="{{ url_for('views.uploaded_file', filename=filename) }}">
+
+    <!-- Action icon dropdown menu -->
+    <p class="titles"><strong><i>Action Required?</i></strong></p>
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i>Default = None</i>
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenu2" style="margin-top: 1%;">
+            <button class="dropdown-item" id="na" type="button" onclick="$('#dropdownMenu2').html('None')">
+            <i class="fa fa-exclamation-triangle fa-fw" id="none" aria-hidden="true"></i> None</button>
+            <button class="dropdown-item" id="im" type="button" onclick="$('#dropdownMenu2').html(document.getElementById('im').innerHTML); document.getElementById('tmp').value = 'is_immediate'">
+            <i class="fa fa-exclamation-triangle fa-fw" id="immediate" aria-hidden="true"></i> Immediate Attention Required</button>
+            <button class="dropdown-item" id="nonim" type="button" onclick="$('#dropdownMenu2').html(document.getElementById('nonim').innerHTML); document.getElementById('tmp').value = 'is_nonimmediate'">
+            <i class="fa fa-exclamation-triangle fa-fw" id="pending" aria-hidden="true"></i> Non-immediate / Pending</button>
+            <button class="dropdown-item" id="flag" type="button" onclick="$('#dropdownMenu2').html(document.getElementById('flag').innerHTML); document.getElementById('tmp').value = 'is_flagged'">
+            <i class="fa fa-exclamation-triangle fa-fw" id="flagged" aria-hidden="true"></i> Flagged Item</button>
+        </div>
+    </div>
+
+    <!-- Get flagged status from dropdown -->
+    <input id="tmp" type="text" form="usrcomment" name="action" hidden="true"></input>
+
+    <!-- Caption -->
+    <p class="titles"><strong><i>Caption</i></strong></p>
+    <div id="caption">
+        <textarea class="captiontext" style="width: 97%;" type="text" form="usrcomment" name="comment" placeholder="Add photo caption..."></textarea>
+    </div>
+    <br><br>
+</div>
+
+<script>
+function getLocation() {
+
+    // Try HTML5 geolocation.
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+        
+        // save current user's coordinates
+        document.getElementById("latitude").value = position.coords.latitude;
+        document.getElementById("longitude").value = position.coords.longitude;
+
+        });
+    } else {
+        // Browser doesn't support Geolocation
+        alert('Your browser does not support geolocation, please use another.')
+    }
+}
+
+function handleLocationError(browserHasGeolocation, pos) {
+    alert('Error: Your browser does not support geoocation.');
+}
+
+window.onload = getLocation();
+
+</script>
+
+
+{% endblock content %}
+
+<!-- Cancel button -->
+{% block edit %}
+<a href="{{ url_for('views.cancel_photo_item', filename = filename, siteID = siteID, projID=projID ) }}" style="text-decoration: none; color: white;">
+    <button type="button" class="editbtn border-0"><i class="fa fa-close fa-sm fa-fw" aria-hidden="true"></i> Cancel</button>
+</a>
+{% endblock %}
+
+<!-- Submit button -->
+{% block add %}
+<form action="{{ url_for('views.create_photo_item', file=filename ) }}" method="POST" id="usrcomment">
+    <input class="addbtn border-0 btn btn-primary" type="submit">
+    <input type="hidden" name="projID" value={{projID}}>
+    <input type="hidden" name="siteID" value={{siteID}}>
+    <input type="text" id ="latitude" name="latitude" hidden="true">
+    <input type="text" id="longitude" name="longitude" hidden="true">
+    <input type="text" id="orientation" name="orientation" hidden="true" value={{orientation}}>
+    <button class="addbtn border-0 btn btn-primary" type="submit">
+        <i class="fa fa-check fa-sm fa-fw" aria-hidden="true"></i> Submit
+    </button>
+</form>
+{% endblock %}

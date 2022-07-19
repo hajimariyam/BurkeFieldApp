@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Create Project{% endblock %}
+{% block header %}
+<div style="font-size: 0.9em;">Create Project</div>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/create_project.css">
+
+<div class="container">
+    <form action="{{url_for('views.new_project')}}" id="edit-form" method="POST">
+        <div class="form-group" style="margin-top: 2.0em;">
+          <label for="name"><b>Project Name</b></label>
+          <input type="text" class="form-control" name="name" placeholder="Enter project name" required>
+        </div>
+        <div class="form-group" style="margin-top: 2.0em;">
+          <label for="client"><b>Client</b></label>
+          <input type="text" class="form-control" name="client" placeholder="Enter client name" required>
+        </div>
+        <div class="form-group" style="margin-top: 2.0em;">
+            <label for="proj_number"><b>CBBEL Project No.</b></label>
+            <input type="text" class="form-control" name="proj_number" placeholder="Enter project number" required>
+        </div>
+          <div class="form-group" style="margin-top: 2.0em;">
+            <label for="location"><b>Site Location</b></label>
+            <input type="text" class="form-control" name="location" placeholder="Enter project location or address" required>
+        </div>
+      </form>
+</div>
+
+{% endblock content %}
+
+<!-- Cancel new project -->
+{% block edit %}
+<a style="text-decoration: none; color: white;">
+    <button type="button" onclick="history.back()" class="editbtn border-0"><i class="fa fa-close fa-sm fa-fw" aria-hidden="true"></i> Cancel</button>
+</a>
+{% endblock %}
+
+<!-- Submit new project -->
+{% block add %}
+  <button class="addbtn border-0 btn btn-primary" form="edit-form" type="submit">
+    <i class="fa fa-check fa-sm fa-fw" aria-hidden="true"></i> Submit</button>
+{% endblock %} 

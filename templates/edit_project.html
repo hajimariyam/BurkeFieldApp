@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}{{proj.proj_number}} | Edit Project{% endblock %}
+{% block header %}Edit Project{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/edit_project.css">
+
+<!-- Delete project -->
+<div class="delete" style="margin-top: 0.5em;">
+<a href="{{ url_for('views.delete_project', id = proj.projectID) }}" onclick="return confirm('Are you sure you want to delete this project?')"
+  class=" btn btn-danger btn-xs" style="float: right; background-color: rgba(194, 5, 5, 0.753) !important;"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i> Project</a>
+</div>
+
+<div class="container">
+    <form action="{{url_for('views.update_project')}}"  id="edit-form" method="POST">
+        <div class="form-group" style="margin-top: 2.0em;">
+            <input type="hidden" class="form-control" name="projID" value="{{proj.projectID}}">
+          </div>
+        <div class="form-group" style="margin-top: 2.5em;">
+          <label for="name"><b>Project Name</b></label>
+          <input type="text" class="form-control" name="name" value="{{proj.name}}" required>
+        </div>
+        <div class="form-group" style="margin-top: 2.0em;">
+          <label for="client"><b>Client</b></label>
+          <input type="text" class="form-control" name="client" value="{{proj.client}}" required>
+        </div>
+        <div class="form-group" style="margin-top: 2.0em;">
+            <label for="proj_number"><b>CBBEL Project No.</b></label>
+            <input type="text" class="form-control" name="proj_number" value="{{proj.proj_number}}" required>
+        </div>
+          <div class="form-group" style="margin-top: 2.0em;">
+            <label for="location"><b>Site Location</b></label>
+            <input type="text" class="form-control" name="location" value="{{proj.location}}" required>
+        </div>
+      </form>
+</div>
+
+<!-- Map Location -->
+<div class = "container" style="width: 100vw; height: 50vh; margin-top: 2.0em; margin-bottom: 4.0em; max-width: 1000px;" id="mapContainer"></div>
+  <script>
+  // Initialize the platform object:
+  var platform = new H.service.Platform({
+  'apikey': '{{apikey}}'
+  });
+
+  const lng = {{proj.longitude}};
+  const lat = {{proj.latitude}};
+   
+  // Obtain the default map types from the platform object   
+	var defaultLayers = platform.createDefaultLayers();
+
+  // Instantiate (and display) a map object:
+  var map = new H.Map(
+    document.getElementById('mapContainer'),
+    defaultLayers.vector.normal.map,
+    {
+      zoom: 15,
+      center: { lat: lat, lng: lng }
+    });
+	
+  var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+  var ui = H.ui.UI.createDefault(map, defaultLayers);
+
+  map.addObject(new H.map.Circle(
+    {lat: lat, lng: lng}, 300,
+    {
+      style: {
+        strokeColor: 'rgb(20, 132, 140)',
+        lineWidth: 2,
+        fillColor: 'rgba(20, 132, 140, 0.5)'
+      }
+    }
+  ));
+
+  window.addEventListener('resize', 
+	  () => map.getViewPort().resize());
+</script>
+
+{% endblock content %}
+
+<!-- Cancel button -->
+{% block edit %}
+<a style="text-decoration: none; color: white;">
+    <button type="button" onclick="history.back()" class="editbtn border-0"><i class="fa fa-close fa-sm fa-fw" aria-hidden="true"></i> Cancel</button>
+</a>
+{% endblock %}
+
+<!-- Save button -->
+{% block add %}
+<button class="addbtn border-0 btn btn-primary" form="edit-form" type="submit">
+    <i class="fa fa-check fa-sm fa-fw" aria-hidden="true"></i> Save
+</button>
+{% endblock %}

@@ -1,0 +1,212 @@
+/* Header links */
+.header-link {
+    text-decoration: none;
+    color: white !important;
+}
+
+/* Tab bar */
+.list {
+    float: left;
+    color: #00838F;
+    border-bottom: 5px solid #00838F;
+    font-size: 14px;
+    text-decoration: none;
+    margin-top: 5%;
+    padding-left: 8%;
+    padding-right: 5%;
+}
+
+.gallery {
+    display: inline-block;
+    color: gray;
+    font-size: 14px;
+    text-decoration: none;
+    margin-left: 5%;
+    margin-top: 5%;
+    padding-left: 5%;
+    padding-right: 5%;
+}
+
+.map {
+    display: inline-block;
+    color: gray;
+    font-size: 15px;
+    text-decoration: none;
+    margin-left: 5%;
+    margin-top: 5%;
+    padding-left: 5%;
+    padding-right: 5%;
+}
+
+.export {
+    float: right;
+    color: gray;
+    font-size: 16px;
+    text-decoration: none;
+    margin-top: 5%;
+    padding-left: 5%;
+    padding-right: 8%;
+}
+
+.fa-list {
+    margin-bottom: 35% !important;
+}
+
+.list:hover, .list:active {
+    color: #00838F;
+}
+
+.gallery:hover, .gallery:active, .map:hover, .map:active, .export:hover, .export:active {
+    color: gray;
+}
+
+/* Header for site visit notes */
+.noteHead {
+    text-align: left;
+    color: #00838F;
+    font-size: 22px; 
+    padding-top: 0%;
+    padding-left: 5%;
+    margin-top: 5%;
+}
+
+/* Site visit notes */
+.noteOption {
+    text-decoration: none;
+    color: black;
+}
+
+#noteOption {
+    padding-bottom: 1%;
+    padding-left: 8%;
+    padding-right: 5%;
+}
+
+.noteOption:hover {
+    color:black;
+}
+
+/* Headers for featured & all photos */
+.photoHeaders {
+    float: left;
+    color: #00838F;
+    font-size: 22px; 
+    margin-bottom: 5%;
+    padding-left: 5%;
+}
+
+/* Images */
+img {
+    width:120px;
+    height:120px;
+    padding: 2%;
+}
+
+/* Featured photo captions */
+.captionFt {
+    background-color: white;
+    text-decoration: none;
+    color: black;
+}
+
+#captionFt {
+    padding-left: 40%;
+    padding-right: 15%;
+    padding-bottom: 2%;
+}
+
+.captionFt:hover {
+    color: black;
+}
+
+/* Action icon */
+#immediate {
+    color: rgb(230, 24, 24);
+    float: right;
+    padding-right: 6%;
+    padding-top: 45px;
+    font-size: x-large;
+}
+
+#pending {
+    color: #e3e632ce;
+    float: right;
+    padding-right: 6%;
+    padding-top: 45px;
+    font-size: x-large;
+}
+
+#flagged {
+    color: #00838F;
+    float: right;
+    padding-right: 6%;
+    padding-top: 45px;
+    font-size: x-large;
+}
+
+/* Sort by dropdown menu */
+.dropdown {
+    float: right;
+    padding-top: 2%;
+    margin-bottom: 5%;
+    padding-right: 5%;
+}
+
+.dropdown-menu-right {
+    margin-top: 0.5em;
+    box-shadow: 0 10px 10px rgb(139, 139, 139);
+}
+
+.dropdown-item:focus, .dropdown-item:hover {
+    background-color: lightgray;
+}
+
+/* All photo captions */
+.captionAll {
+    background-color: white;
+    text-decoration: none;
+    color: black;
+}
+
+#captionAll {
+    padding-left: 40%;
+    padding-right: 7%;
+    padding-bottom: 3%;
+    padding-top: 2%;
+}
+
+.captionAll:hover {
+    color: black;
+}
+
+/* Highlight newly added photos */
+.imgAnimation, #captAnimation {
+    animation: background-fade 20s forwards;
+    
+}
+
+@keyframes background-fade {
+    0% {
+        background: #d1e7dd;
+    }
+    100% {
+        background: white;
+    }
+}
+
+/* Add photo button in footer */
+.addbtn{
+    background-color: #00838F;
+    border-color: #00838F;
+    color: white;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 5px;
+    padding-right: 5%;
+    height: 2.0em;
+    padding: none !important;
+    font-size: 1.15em;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+}

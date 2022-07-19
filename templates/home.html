@@ -1,0 +1,192 @@
+<!-- uses styling, navbar, and footer from base.html -->
+{% extends "base.html" %} 
+
+{% block title %}Home{% endblock %}
+{% block header %}Home{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"  href="/static/home.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script> 
+<script>var projects = {{ allprojs|safe }}</script>
+
+{% if deleted_project != None %}
+<div class="alert alert-success" role="alert">
+  Project has been deleted. Click <a href="{{ url_for('views.undo_delete_project') }}" class="alert-link">here</a> to undo.
+</div>
+{% endif %}
+
+
+<div id="body">
+  <div style="padding-top: 2%;">
+      <div style="float:left !important;">
+          <!-- Nearby Projects sort the projects based on the user's location -->
+          <p class="homeTitles"><strong><i>Nearby Projects...</i></strong></p>
+          <i><p class="locationTitle" id="location">Loading...</p></i>
+      </div>
+      <!-- Address book icon that navigates to the clients page -->
+      <a href="{{ url_for('views.view_clients', sortby='az') }}" class="clientbtn"><i class="fa fa-address-book fa-2x"></i></a>
+  </div>
+
+  <table class="table table-striped">
+      <thead>
+      </thead>
+      <!-- closest projects -->
+      <tbody>
+          <tr>
+              <td id="empty" scope="row">
+                <a id="nearbyproj" style="text-decoration: none; color:black;" href="#" onclick="document.getElementById('dummyform').submit();">
+                Loading...</a>
+              </td>
+          </tr>
+          <tr>
+              <td id="second" scope="row">
+                <a id="nearbyproj2" style="text-decoration: none; color:black;" href="#" onclick="document.getElementById('dummyform2').submit();"></a>
+              </td>
+          </tr>
+      </tbody>
+  </table>
+
+  <!-- Dummy forms to pass projectID from client side to server side -->
+  <form id="dummyform" method='POST'>
+    <input type="text" id="projectID" name="projectID" hidden='true'>
+  </form>
+  <form id="dummyform2" method='POST'>
+    <input type="text" id="projectID2" name="projectID" hidden='true'>
+  </form>
+
+  <!-- Recent projects sort the projects by last accessed date -->
+  <p class="homeTitles" style="padding-top: 3%; margin-top: 0% !important;"><strong><i>Recent Projects...</i></strong></p>
+  <table class="table table-striped">
+      <thead>
+      </thead>
+      <tbody>
+          {% if projects|length == 0 %}
+              <tr>
+                  <td scope="row" style="text-align: center; width: 100%;">
+                      <a style='text-decoration: none; color:black;' href='#'>
+                          You haven't viewed any projects yet.<br>Select a <strong>Nearby Project</strong> or go to 
+                          <a href="{{ url_for('views.view_clients', sortby='az') }}" style="text-decoration: none; color: black;">
+                            <strong>Clients </strong><i class="fa fa-address-book fa-fw"></i>
+                          </a>
+                      </a>
+                  </td>
+              </tr>
+          {% else %}
+              <!-- calls the five most recent projects from database -->
+              {% for project in projects [:5] %} 
+                  <tr>
+                      <td scope="row">
+                        <!-- These projects are stored in the database upon user entry -->
+                        <a style="text-decoration: none; color:black;" href="{{ url_for('views.view_all_site_visits', projID = project[0].projectID)  }}">
+                        <strong>Project {{ project[0].proj_number }}</strong>
+                        <br>Client: {{ project[0].client }}<br>Last Accessed: {{ project[1].strftime("%b %#d, %Y %#I:%M %p") }}</a>
+                      </td>
+                  </tr>
+              {% endfor %}
+          {% endif %}
+      </tbody>
+  </table>
+</div>
+
+<script>
+  window.onload = getLocation;
+  const platform = new H.service.Platform({
+    "app_id": "g8uCA1PX0zhQJlsVwuoK",
+    "apikey": "sAOR5sR30TlPANYwgsfNKPe4Hec9GxMmq-BOgHXM8pk"
+  });
+
+  const geocoderService = platform.getGeocodingService(); 
+
+  var x = document.getElementById("location")
+  function getLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(showPosition);
+    } else { 
+      x.innerHTML = "Geolocation is not supported by this browser.";
+    }
+    init();
+  }
+
+  function showPosition(position) {
+    geocoderService.reverseGeocode(
+      {
+        mode: "retrieveAddress",
+        maxresults: 1,
+        prox: position.coords.latitude + "," + position.coords.longitude
+      },
+      success => {
+        console.log(success.Response);
+        x.innerHTML = "Location: " + success.Response.View[0].Result[0].Location.Address.City +
+                      ", " + success.Response.View[0].Result[0].Location.Address.State;
+        var index = findNearbyProjects(projects, position.coords.latitude, position.coords.longitude);
+        var closestProject = document.getElementById("nearbyproj");
+        var dummyform = document.getElementById("projectID");
+        if (index == -1) {
+          empty = document.getElementById("empty");
+          empty.innerHTML = "<a style='text-decoration: none; color:black; display:inline-block; text-align: center; width: 100%;' href='#'>" +
+          "There are no projects yet.<br>Select <i class='fa fa-plus fa-sm fa-fw'></i><strong>Project</strong> to create one!</a>";
+        }
+        else {
+          closestProject.innerHTML = "<strong>Project " + projects[index].proj_number + "</strong><br>Client: "+
+                                    projects[index].client + "<br>Location: " + projects[index].location;
+          dummyform.value = projects[index].projectID;
+        }
+
+        var index2 = findNearbyProjects(projects, position.coords.latitude, position.coords.longitude, index);
+        var closestProject2 = document.getElementById("nearbyproj2");
+        var dummyform2 = document.getElementById("projectID2");
+        if (index2 > -1) {
+          closestProject2.innerHTML = "<strong>Project " + projects[index2].proj_number + "</strong><br>Client: "+
+                                    projects[index2].client + "<br>Location: " + projects[index2].location;
+          dummyform2.value = projects[index2].projectID;
+        }
+      },
+      error => {
+        console.error(error);
+      }
+    )
+  }
+
+  function findNearbyProjects(projects, lat, lon, index1=-1) {
+    const distances = [];
+    for (var i = 0; i < projects.length; i++) {
+      distances.push(distance(lat, lon, projects[i].latitude, projects[i].longitude))
+    }
+
+    var index = -1;
+    var min = Infinity;
+    for (var i = 0; i < distances.length; i++) {
+      if (distances[i] < min && i != index1) {
+        index = i;
+        min = distances[i];
+      }
+    }
+
+    return index;
+  }
+
+  function distance(lat1, lon1, lat2, lon2) {
+    if ((lat1 == lat2) && (lon1 == lon2)) {
+      return 0;
+    }
+    else {
+      var radlat1 = Math.PI * lat1/180;
+      var radlat2 = Math.PI * lat2/180;
+      var theta = lon1-lon2;
+      var radtheta = Math.PI * theta/180;
+      var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+      if (dist > 1) {
+        dist = 1;
+      }
+      dist = Math.acos(dist);
+      dist = dist * 180/Math.PI;
+      dist = dist * 60 * 1.1515;
+      return dist;
+    }
+  }
+
+</script>
+
+{% endblock content %}
+{% block edit %} {% endblock %}

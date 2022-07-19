@@ -1,0 +1,99 @@
+/* Header links */
+.header-link {
+    text-decoration: none;
+    color: white !important;
+}
+
+/* Tab bar */
+.list {
+    float: left;
+    color: gray;
+    font-size: 14px;
+    text-decoration: none;
+    margin-top: 5%;
+    padding-left: 8%;
+    padding-right: 5%;
+}
+
+.gallery {
+    display: inline-block;
+    color: gray;
+    font-size: 14px;
+    text-decoration: none;
+    margin-left: 5%;
+    margin-top: 5%;
+    padding-left: 5%;
+    padding-right: 5%;
+}
+
+.map {
+    display: inline-block;
+    color: #00838F;
+    border-bottom: 5px solid #00838F;
+    font-size: 15px;
+    text-decoration: none;
+    margin-left: 5%;
+    margin-top: 5%;
+    padding-left: 5%;
+    padding-right: 5%;
+}
+
+.export {
+    float: right;
+    color: gray;
+    font-size: 16px;
+    text-decoration: none;
+    margin-top: 5%;
+    padding-left: 5%;
+    padding-right: 8%;
+}
+
+.fa-map-marker {
+    margin-bottom: 35% !important;
+}
+
+.map:hover, .map:active {
+    color: #00838F;
+}
+
+.list:hover, .list:active, .gallery:hover, .gallery:active, .export:hover, .export:active {
+    color: gray;
+}
+
+/* Map buttons */
+.buttons {
+    margin-top: 1.0em;
+    margin-bottom: 1.0em;
+}
+
+#location {
+    float: left;
+    border: none;
+}
+
+#project {
+    margin-left: 0.5em;
+    border: none;
+}
+
+#reset {
+    border: none;
+    float: right;
+}
+
+/* Add photo button in footer */
+.addbtn{
+    background-color: #00838F;
+    border-color: #00838F;
+    color: white;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 5px;
+    padding-right: 5%;
+    height: 2.0em;
+    padding: none !important;
+    font-size: 1.15em;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+}

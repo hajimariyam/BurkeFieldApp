@@ -1,0 +1,21 @@
+/* Sort by dropdown */
+.dropdown-menu {
+    margin-top: 0.5em;
+    box-shadow: 0 10px 10px rgb(139, 139, 139);
+}
+
+.dropdown-item:focus, .dropdown-item:hover {
+    background-color: lightgray;
+}
+
+/* Search area border when selected */
+.form-control:focus, .form-control:active {
+    border-color: gray;
+    box-shadow: 0 0 3px 2px rgb(180, 180, 180);
+}
+
+
+#body {
+    padding:10px;
+    padding-bottom: 2.5rem;
+}

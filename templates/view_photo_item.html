@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{visit_date.strftime("%b %#d, %Y")}} | Photo
+{% endblock %}
+
+{% block header %}
+<div style="text-align: center;">
+  <a class="header-link" href="{{ url_for('views.view_projects',  client = client, sortby = 'asc' ) }}">
+      <h2 style="margin-bottom: 0em;">
+        <!-- display without client prefixes and only 18 characters max -->
+        {% for prefix in prefixes %}
+            {% if prefix in client %}
+                {% set name = client.replace(prefix, "") %}
+                {% if name|length < 18 %}
+                    {{ name }}
+                {% else %}
+                    {{ name[:18] + '...' }}
+                {% endif %}
+            {% break %}
+            {% endif %}
+        {% endfor %}
+        {% if "Town of " not in client and "City of " not in client and "County of " not in client and "Village of " not in client %}
+            {% if client|length < 18 %}
+                {{ client }}
+            {% else %}
+                {{ client[:18] + '...' }}
+            {% endif %}
+        {% endif %}
+      </h2>
+  </a>
+  <h6 style="margin-bottom: -0.2em; margin-top: 0.2em;">
+      <a class="header-link" href="{{ url_for('views.view_all_site_visits', projID = projID ) }}">
+          {{proj_number}} |
+      </a>
+      <a class="header-link" href="{{ url_for('views.view_site_visit', siteID = siteID, sortby='desc', view='none' ) }}">
+          {{visit_date.strftime("%b %#d, %Y")}}
+      </a>
+  </h6>
+</div>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/view_photo_item.css"><br>
+
+<div id="body" class="body">
+    <div>
+      <!-- Photo upload time -->
+      <p class="time">{{photoitem.time.strftime("%#I:%M %p")}}</p>
+      <!-- Action icon-->
+      {% if photoitem.is_immediate == True %}
+          <i class="fa fa-exclamation-triangle fa-2x" id="immediate"> </i>
+      {% elif photoitem.is_nonimmediate == True %}
+          <i class="fa fa-exclamation-triangle fa-2x" id="pending"> </i>
+      {% elif photoitem.is_flagged == True %}
+          <i class="fa fa-exclamation-triangle fa-2x" id="flagged"> </i>
+      {% endif %}
+    </div>
+
+    <br>
+
+    <!-- Image -->
+    <img class="image" src="{{ url_for('views.uploaded_file', filename = photoitem.filename) }}">
+
+    <br>
+
+    <!-- Caption -->
+    <div id="caption">
+      <a class="captiontext" style="width: 97%;">
+        {% if photoitem.comment|length == 0 %}
+            <i>None</i>
+        {% else %}
+            {{ photoitem.comment }}
+        {% endif %}
+      </a>
+    </div>
+
+    <!-- Embedded interactive map of photo location and current location -->
+    <div class = "container" style="width: 100vw; height: 50vh; margin-top: 3.0em; margin-bottom: 4.0em; max-width: 1000px;" id="mapContainer"></div>
+    <script>
+      // Initialize the platform object:
+      var platform = new H.service.Platform({
+        'apikey': '{{apikey}}'
+      });
+
+      const geocoderService = platform.getGeocodingService();
+      const lng = {{photoitem.longitude}};
+      const lat = {{photoitem.latitude}};
+      
+      // Obtain the default map types from the platform object   
+      var defaultLayers = platform.createDefaultLayers();
+
+      // Instantiate (and display) a map object:
+      var map = new H.Map( 
+        document.getElementById('mapContainer'),
+        defaultLayers.vector.normal.map,
+        {
+          zoom: 18,
+          center: { lat: lat, lng: lng }
+      });
+
+      // Instantiate the default behavior, providing the mapEvents object:
+      var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+      var ui = H.ui.UI.createDefault(map, defaultLayers);
+      var svgicon = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20px" height="18px" viewBox="0 0 20 18" version="1.1">' +
+            '<g id="Icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">' +
+            '<g id="Two-Tone" transform="translate(-918.000000, -3212.000000)">' +
+            '<g id="Maps" transform="translate(100.000000, 3068.000000)">' +
+            '<g id="Two-Tone-/-Maps-/-local_see" transform="translate(816.000000, 142.000000)">' +
+            '<g><polygon id="Path" points="0 0 24 0 24 24 0 24"/>' +
+            '<path d="M20,6 L15.95,6 L15.36,5.35 L14.12,4 L9.88,4 L8.65,5.35 L8.05,6 L4,6 L4,18 L20,18 L20,6 Z M12,17 C9.24,17 7,14.76 7,12 C7,9.24 9.24,7 12,7 C14.76,7 17,9.24 17,12 C17,14.76 14.76,17 12,17 Z" id="🔹-Secondary-Color" fill="#D0D0D0"/>' +
+            '<path d="M4,20 L20,20 C21.1,20 22,19.1 22,18 L22,6 C22,4.9 21.1,4 20,4 L16.83,4 L15,2 L9,2 L7.17,4 L4,4 C2.9,4 2,4.9 2,6 L2,18 C2,19.1 2.9,20 4,20 Z M4,6 L8.05,6 L8.64,5.35 L9.88,4 L14.12,4 L15.36,5.35 L15.95,6 L20,6 L20,18 L4,18 L4,6 Z M12,7 C9.24,7 7,9.24 7,12 C7,14.76 9.24,17 12,17 C14.76,17 17,14.76 17,12 C17,9.24 14.76,7 12,7 Z M12,15.2 C10.23,15.2 8.8,13.77 8.8,12 C8.8,10.23 10.23,8.8 12,8.8 C13.77,8.8 15.2,10.23 15.2,12 C15.2,13.77 13.77,15.2 12,15.2 Z" id="🔹-Primary-Color" fill="#1D1D1D"/>' +
+            '</g></g></g></g></g></svg>'
+      var icon = new H.map.Icon(svgicon),
+        coords = {lat: lat, lng: lng},
+        mylocation = new H.map.Marker(coords, {icon: icon});
+      map.addObject(mylocation);
+
+      // Get the current location via HTML Geolocation
+      function getLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(showPosition);
+        } else { 
+          x.innerHTML = "Geolocation is not supported by this browser.";
+        }
+      }
+
+      function showPosition(position) {
+        geocoderService.reverseGeocode(
+          {
+            mode: "retrieveAddress",
+            maxresults: 1,
+            prox: position.coords.latitude + "," + position.coords.longitude
+          },
+          success => {
+            console.log(success.Response);
+            var curicon = '<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" height="24" width="24" version="1.1">' +
+                    '<g transform="translate(0 -1028.4)">' +
+                    '<path d="m12 0c-4.4183 2.3685e-15 -8 3.5817-8 8 0 1.421 0.3816 2.75 1.0312 3.906 0.1079 0.192 0.221 0.381 0.3438 0.563l6.625 11.531 6.625-11.531c0.102-0.151 0.19-0.311 0.281-0.469l0.063-0.094c0.649-1.156 1.031-2.485 1.031-3.906 0-4.4183-3.582-8-8-8zm0 4c2.209 0 4 1.7909 4 4 0 2.209-1.791 4-4 4-2.2091 0-4-1.791-4-4 0-2.2091 1.7909-4 4-4z" transform="translate(0 1028.4)" fill="#e74c3c"/>' +
+                    '<path d="m12 3c-2.7614 0-5 2.2386-5 5 0 2.761 2.2386 5 5 5 2.761 0 5-2.239 5-5 0-2.7614-2.239-5-5-5zm0 2c1.657 0 3 1.3431 3 3s-1.343 3-3 3-3-1.3431-3-3 1.343-3 3-3z" transform="translate(0 1028.4)" fill="#c0392b"/>' +
+                    '</g></svg>'
+            var icon = new H.map.Icon(curicon),
+              coords = {lat: position.coords.latitude, lng: position.coords.longitude},
+              mylocation = new H.map.Marker(coords, {icon: icon});
+            map.addObject(mylocation);
+          },
+          error => {
+            console.error(error);
+          }
+        )
+      }
+
+      window.onload = getLocation();
+      window.addEventListener('resize', 
+	      () => map.getViewPort().resize());
+    </script>
+    </div>
+
+    <script>
+      const isIOS = 
+          navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
+          navigator.userAgent.match(/AppleWebKit/);
+  
+      function init() {
+          if (!isIOS) {
+              window.addEventListener("deviceorientationabsolute", handler, true);
+          }
+      }
+  
+      function startCompass() {
+          if (isIOS) {
+              DeviceOrientationEvent.requestPermission()
+              .then((response) => {
+                  if (response === "granted") {
+                  window.addEventListener("deviceorientation", handler, true);
+                  } else {
+                  alert("has to be allowed!");
+                  }
+              })
+              .catch(() => alert("not supported"));
+          }
+      }
+  
+      function handler(e) {
+          compass = e.webkitCompassHeading || Math.abs(e.alpha - 360);
+          var degreeVal = document.getElementById("orientation");
+          degreeVal.value = compass;
+      }
+  
+      window.onload = init();
+  
+  </script>
+
+{% endblock content %}
+
+<!-- Edit photo item -->
+{% block edit %}
+<a href="{{ url_for('views.edit_photo_item', photoID = photoitem.photoID) }}" style="text-decoration: none; color: white;">
+  <button type="button" class="editbtn border-0"><i class="fa fa-pencil-square-o fa-sm fa-fw" aria-hidden="true"></i> Photo</button>
+</a>
+{% endblock %}
+
+<!-- Retake photo -->
+{% block add %}
+<form method=post enctype=multipart/form-data>
+  <label onclick="startCompass()" class="addbtn border-0 btn btn-primary"><i class="fa fa-camera fa-sm fa-fw"></i> Retake
+      <input class="addphotofile" accept="image/*" type=file 
+      onchange="this.form.submit()" name=file style="display: none;"><br><br>
+      <input type="text" id="orientation" name="orientation" hidden='true'>
+  </label>
+</form>
+{% endblock %} 
