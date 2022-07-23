@@ -14,42 +14,9 @@ import requests, msal
 from PIL import Image
 
 views = Blueprint('views', __name__)
-api_key = 'qlrRiPNTPWGYLnSG9qJmWGtSay-QVgiCqlNUyBoF_aY'
 
-# Convert query of all projects to list object that can be jsonified
-def convert_to_list(projects):
-    converted_list = []
-    for project in projects:
-        dict = {
-            "projectID": project.projectID,
-            "name": project.name,
-            "client": project.client,
-            "proj_number": project.proj_number,
-            "location": project.location,
-            "latitude": project.latitude,
-            "longitude": project.longitude
-        }
-        converted_list.append(dict)
-    return converted_list
-
-
-@views.route("/", methods=['GET', 'POST'])
-def index():
-    if not session.get("user"):
-        return redirect(url_for("views.login"))
-    if request.method == 'POST':
-        projID = request.form['projectID']
-        return redirect(url_for('views.view_all_site_visits', projID=projID))
-    all_projects = Project.query.all()
-    allprojs = convert_to_list(all_projects)
-    projects = db.session.query(Project, Log.timestamp).join(Log, Log.project_number == Project.proj_number).filter(Log.user==session["user"].get("name"), Log.action=='READ').order_by(Log.timestamp.desc()).all()
-    graphcall()
-    # Remove duplicate projects from recent projects list
-    while (True):
-        if (remove_dup_projects(projects) == False):
-            break
-    return render_template('home.html',user=session["user"],projects=projects,allprojs=json.dumps(allprojs),deleted_project=None)
-
+# ---------------------------------------------------------------------------------
+# Microsoft Login
 
 @views.route("/login")
 def login():
@@ -74,17 +41,6 @@ def authorized():
     return redirect(url_for("views.index"))
 
 
-# ERROR PAGES
-@views.route('/error-401')
-def error_401():
-    return render_template ('error_401.html')
-
-
-@views.route('/error-404')
-def error_404():
-    return render_template ('error_404.html')
-
-
 # Logout current user
 @views.route("/logout")
 def logout():
@@ -92,13 +48,11 @@ def logout():
         return redirect(url_for("views.error_401"))
     session.clear()  # Wipe out user and its token cache from session
     session.pop("user", None) #might have to move this to AFTER user clicks which acct to log out of
-    return redirect(url_for("views.index"))
+    # return redirect(url_for("views.index"))
     # Below: logs out of microsoft account on device and requires to rewrite password
-    '''
     return redirect(  # Also logout from your tenant's web session
         app_config.AUTHORITY + "/oauth2/v2.0/logout" +
-        "?post_logout_redirect_uri=" + url_for("views.index", _external=True)y)
-    '''
+        "?post_logout_redirect_uri=" + url_for("views.index", _external=True))
 
 
 # Request graph API from microsoft and add new users to db
@@ -153,8 +107,25 @@ def _get_token_from_cache(scope=None):
         _save_cache(cache)
         return result
 
+
 app.jinja_env.globals.update(_build_auth_code_flow=_build_auth_code_flow) 
 
+
+# ---------------------------------------------------------------------------------
+# Error Pages
+
+@views.route('/error-401')
+def error_401():
+    return render_template ('error_401.html')
+
+
+@views.route('/error-404')
+def error_404():
+    return render_template ('error_404.html')
+
+
+# ---------------------------------------------------------------------------------
+# Log Changes to DB
 
 # Log changes/updates to projects
 def log_crud_project(project_number, action):
@@ -220,6 +191,9 @@ def log_crud_photoitem(photoID, action):
     db.session.commit()
 
 
+# ---------------------------------------------------------------------------------
+# Helper Functions
+
 # Remove duplicate projects and return true if duplicate found
 def remove_dup_projects(projects):
     project_set = set()
@@ -232,11 +206,91 @@ def remove_dup_projects(projects):
     return False
 
 
+# Convert query of all projects to list object that can be jsonified
+def convert_to_list(projects):
+    converted_list = []
+    for project in projects:
+        dict = {
+            "projectID": project.projectID,
+            "name": project.name,
+            "client": project.client,
+            "proj_number": project.proj_number,
+            "location": project.location,
+            "latitude": project.latitude,
+            "longitude": project.longitude
+        }
+        converted_list.append(dict)
+    return converted_list
+
+
+# Convert query of all photos to list object that can be jsonified
+def convert_photos_to_list(photos):
+    converted_list = []
+    for photo in photos:
+        dict = {
+            "photoID": photo.photoID,
+            "siteID": photo.siteID,
+            "filename": photo.filename,
+            "author": photo.author,
+            "time": photo.time,
+            "latitude": photo.latitude,
+            "longitude": photo.longitude,
+            "comment": photo.comment,
+            "is_flagged": photo.is_flagged,
+            "is_immediate": photo.is_immediate,
+            "is_nonimmediate": photo.is_nonimmediate,
+            "orientation": photo.orientation
+        }
+        converted_list.append(dict)
+    return converted_list
+
+
+# Ensure uploaded file is an image
+def allowed_file(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+# Called when user selects '+Visit' from all site visits page or calendar view
+# Renames filename of photo based on todays date (new site visit NOT yet created)
+# Rename file to 'PROJNUM-MM-DD-YYYY-TIME-FNAME-LNAME.jpg' format
+def rename_upload(projID):
+    pnum = Project.query.get(projID).proj_number
+    timestamp = datetime.now()
+    date = timestamp.strftime("%m-%d-%Y")
+    time = timestamp.strftime("%H%M%S")
+    filename = pnum + '-' + date + '-' + time + '-' + session["user"].get('name') + '.jpg'
+    filename = secure_filename(filename.replace(' ', '-'))
+    return filename
+
+
+# ---------------------------------------------------------------------------------
+# Home Page
+
+@views.route("/", methods=['GET', 'POST'])
+def index():
+    if not session.get("user"):
+        return redirect(url_for("views.login"))
+    if request.method == 'POST':
+        projID = request.form['projectID']
+        return redirect(url_for('views.view_all_site_visits', projID=projID))
+    all_projects = Project.query.all()
+    allprojs = convert_to_list(all_projects)
+    projects = db.session.query(Project, Log.timestamp).join(Log, Log.project_number == Project.proj_number).filter(Log.user==session["user"].get("name"), Log.action=='READ').order_by(Log.timestamp.desc()).all()
+    graphcall()
+    # Remove duplicate projects from recent projects list
+    while (True):
+        if (remove_dup_projects(projects) == False):
+            break
+    return render_template('home.html',user=session["user"],projects=projects,allprojs=json.dumps(allprojs),deleted_project=None)
+
+
 # Return home screen with list of 5 most recent projects
 @views.route('/home', methods=['GET', 'POST'])
 def home():
     if not session.get("user"):
-        return redirect(url_for("views.error_401"))# get latitude and longitude coordinates of project location
+        return redirect(url_for("views.error_401"))
+    # get latitude and longitude coordinates of project location
     if request.method == 'POST':
         projID = request.form['projectID']
         return redirect(url_for('views.view_all_site_visits', projID=projID))
@@ -250,7 +304,9 @@ def home():
     return render_template('home.html',allprojs=json.dumps(allprojs),projects=projects,user=session["user"],deleted_project=None)
 
 
-# CLIENTS PAGE
+# ---------------------------------------------------------------------------------
+# Clients Page
+
 @views.route('/view-clients/<sortby>', methods=['GET','POST'])
 def view_clients(sortby="az"):
     if not session.get("user"):
@@ -296,7 +352,9 @@ def view_clients(sortby="az"):
     return render_template('view_clients.html', clients=clients, user=session["user"], sortby=sortby, search=search)       
 
 
-# PROJECTS PAGE
+# ---------------------------------------------------------------------------------
+# Projects Page - view, create, update, delete
+
 @views.route('/view-projects/<sortby>/<client>/', methods=['GET','POST'])
 def view_projects(client, sortby="asc"):
     if not session.get("user"):
@@ -353,7 +411,7 @@ def new_project():
 
         # get latitude and longitude coordinates of project location
         URL = "https://geocode.search.hereapi.com/v1/geocode"
-        PARAMS = {'apikey':api_key,'q':location} 
+        PARAMS = {'apikey':app_config.API_KEY,'q':location} 
         r = requests.get(url = URL, params = PARAMS) 
         data = r.json()
         latitude = data['items'][0]['position']['lat']
@@ -376,7 +434,7 @@ def edit_project(projID):
     proj = Project.query.filter_by(projectID=projID).first()
     if not proj:
         return redirect(url_for("views.error_404"))
-    return render_template('edit_project.html',proj=proj,user=session["user"],apikey=api_key)
+    return render_template('edit_project.html',proj=proj,user=session["user"],apikey=app_config.API_KEY)
 
 
 # Update project with db and return to list view of all site visits for this project
@@ -398,7 +456,7 @@ def update_project():
                     log_crud_project(data.proj_number, action='UPDATE')
         # get latitude and longitude coordinates of project location
         URL = "https://geocode.search.hereapi.com/v1/geocode"
-        PARAMS = {'apikey':api_key,'q':data.location} 
+        PARAMS = {'apikey':app_config.API_KEY,'q':data.location} 
         r = requests.get(url = URL, params = PARAMS) 
         mapdata = r.json()
         latitude = mapdata['items'][0]['position']['lat']
@@ -499,6 +557,9 @@ def undo_delete_project():
     return redirect(url_for('views.home'))
 
 
+# ---------------------------------------------------------------------------------
+# Site Visit - create, update, delete
+
 # Create new site visit
 def new_site_visit(projID, date):
     if not projID:
@@ -507,366 +568,6 @@ def new_site_visit(projID, date):
     db.session.add(new_visit)
     db.session.commit()
     return new_visit.sitevisitID
-
-
-# Add photo item to db and return to upload photo page
-@views.route('/create-photo-item/<file>', methods=['GET', 'POST'])
-def create_photo_item(file):
-    if not session.get("user"):
-        return redirect(url_for("views.error_401"))
-    if request.method == 'POST':
-        projID = request.form['projID']
-        project = Project.query.get(projID)
-        if not project:
-            os.remove('static/uploads/' + file)
-            return redirect(url_for("views.error_404"))
-        # Obtain all information from add photo page
-        comment = request.form['comment']
-        action = request.form['action']
-        siteID = request.form['siteID']
-        latitude = request.form['latitude']
-        longitude = request.form['longitude']
-        orientation = request.form['orientation']
-        time = datetime.now()
-        filename = file
-        author = session["user"].get("name")
-        # Add visit. Create a new site visit for today if does not already exist.
-        # Else, add photo to the selected site visit
-        if siteID == '-1':
-            date = time
-            existing_site_visit = SiteVisit.query.filter(SiteVisit.projID==projID, SiteVisit.date.contains(date.strftime("%Y-%m-%d"))).first()
-            if existing_site_visit:
-                siteID = existing_site_visit.sitevisitID
-            else:
-                siteID = new_site_visit(projID, date)
-                log_crud_sitevisit(siteID,action='CREATE')
-        # Create new photo item and link to sitevisitID
-        if action == 'is_flagged':
-            new_photo_item = PhotoItem(time=time,comment=comment,filename=filename,siteID=siteID,
-            author=author,latitude=latitude,longitude=longitude,is_flagged=True,orientation=orientation)
-        elif action == 'is_immediate':
-            new_photo_item = PhotoItem(time=time,comment=comment,filename=filename,siteID=siteID,
-            author=author,latitude=latitude,longitude=longitude,is_immediate=True,orientation=orientation)
-        elif action == 'is_nonimmediate':
-            new_photo_item = PhotoItem(time=time,comment=comment,filename=filename,siteID=siteID,
-            author=author,latitude=latitude,longitude=longitude,is_nonimmediate=True,orientation=orientation)
-        else:
-            new_photo_item = PhotoItem(time=time,comment=comment,filename=filename,siteID=siteID,
-            author=author,latitude=latitude,longitude=longitude,orientation=orientation)
-        db.session.add(new_photo_item)
-        sitevisit = SiteVisit.query.get(siteID)
-        if not sitevisit:
-            db.session.delete(new_photo_item)
-            os.remove('static/uploads/' + file)
-            return redirect(url_for("views.error_404"))
-        photoID = PhotoItem.query.filter(PhotoItem.filename==new_photo_item.filename).first().photoID
-        log_crud_photoitem(photoID, action='CREATE')
-        db.session.commit()
-        
-    return redirect(url_for('views.view_site_visit', siteID=siteID, sortby='desc', view=filename)) 
-
-
-# Remove filename from upload folder and redirect to view site visit or view all site visits page
-@views.route('/cancel-photo-item/<filename>/<siteID>/<projID>', methods=['GET'])
-def cancel_photo_item(filename, siteID, projID):
-    os.remove('static/uploads/' + filename)
-
-    if siteID == '-1':
-        return redirect(url_for("views.view_all_site_visits", projID=projID))
-    return redirect(url_for("views.view_site_visit", siteID=siteID, sortby="desc", view='none'))
-
-
-# Display uploaded photo to add photo page
-@views.route('/uploaded-file/<filename>/', methods=['GET', 'POST'])
-def uploaded_file(filename):
-    if not session.get("user"):
-        return redirect(url_for("views.error_401"))
-    return send_from_directory( 'static/uploads/', filename)
-
-
-# Ensure uploaded file is an image
-def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-# Rename file to 'PROJNUM-MM-DD-YYYY-TIME-FNAME-LNAME.jpg' format
-def rename_upload(projID):
-    pnum = Project.query.get(projID).proj_number
-    timestamp = datetime.now()
-    date = timestamp.strftime("%m-%d-%Y")
-    time = timestamp.strftime("%H%M%S")
-    filename = pnum + '-' + date + '-' + time + '-' + session["user"].get('name') + '.jpg'
-    filename = secure_filename(filename.replace(' ', '-'))
-    return filename
-
-
-# Save a resized photo to display in thumbnails
-def resize_photo(photo):
-    fileString = (photo.filename).split('.jpg')
-    if os.path.exists(f'static/uploads/{fileString[0]}_resized.jpg'):
-        pass
-    else:
-        image = Image.open(f'static/uploads/{photo.filename}')
-        image = image.resize((175,175),Image.LANCZOS)
-        if image.mode in ("RGBA", "P"):
-            image = image.convert("RGB")
-        image.save(f'static/uploads/{fileString[0]}_resized.jpg', optimize=True, quality=95)
-
-
-# Return list view of all site visits for a specific project
-@views.route('/view-all-site-visits/<projID>/', methods=['GET', 'POST'])
-def view_all_site_visits(projID):
-    if not session.get("user"):
-        return redirect(url_for("views.error_401"))
-    project = Project.query.get(projID)
-    if not project:
-        return redirect(url_for("views.error_404"))
-    # Once user is looking at another project, delete temp files
-    dir = 'static/temp'
-    for file in os.listdir(dir):
-        os.remove(os.path.join(dir, file))
-    sitevisits = SiteVisit.query.filter_by(projID=projID).order_by(SiteVisit.date.desc()).all()
-    # add site visit to project
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        orientation = request.form['orientation']
-        if file.filename == '': 
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = rename_upload(projID)
-            file.save(os.path.join('static/uploads/', filename))
-            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=-1, orientation=orientation)
-    # get info for title & header
-    proj_number = project.proj_number
-    client = project.client
-    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
-    # update 'READ' project for current user
-    log_crud_project(proj_number, action='READ')
-
-    # TOTAL PHOTOS PER SITE VISIT
-    visitIDs = SiteVisit.query.with_entities(SiteVisit.sitevisitID).order_by(SiteVisit.date.desc()).all()
-    # create dictionary {key=sitevisitID : value=0}
-    total_photos = { visitID[0] : 0 for visitID in visitIDs }
-    # update value = total number of photos for that site ID
-    for visitID in total_photos.keys():
-        count = PhotoItem.query.with_entities(PhotoItem.photoID).filter(PhotoItem.siteID.like(visitID)).all()
-        total_photos[visitID] = len(count)
-
-    # create dictionary with site visit date and # flagged items
-    items_dct = {}
-    for visit in sitevisits:
-        photos = PhotoItem.query.filter_by(siteID=visit.sitevisitID).filter( (PhotoItem.is_immediate==True) |
-                    (PhotoItem.is_nonimmediate==True) | (PhotoItem.is_flagged==True) ).all()
-        count = len(photos)
-        items_dct[visit.date] = count
-
-    return render_template('view_all_site_visits.html', sitevisits=sitevisits, proj_number=proj_number, prefixes=prefixes,
-        items_dct=items_dct, projID=projID, total_photos=total_photos, client=client, user=session["user"])
-
-
-# Return calendar with site visits
-@views.route('/calendar/<projID>', methods=['GET','POST'])
-def calendar(projID):
-    if not session.get("user"):
-        return redirect(url_for("views.error_401"))
-    project = Project.query.get(projID)
-    if not project:
-        return redirect(url_for("views.error_404"))
-    visits = SiteVisit.query.filter_by(projID=projID).all()
-    # add site visit to project
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        orientation = request.form['orientation']
-        if file.filename == '': 
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = rename_upload(projID)
-            file.save(os.path.join('static/uploads/', filename))
-            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=-1, orientation=orientation)
-    # get info for title & header
-    proj_number = project.proj_number
-    client = project.client
-    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
-    
-    return render_template('calendar.html', visits=visits, proj_number=proj_number, client=client, projID=projID, prefixes=prefixes, 
-                            user=session["user"])
-
-
-# Redirect to the upload photo page OR the add photo page
-@views.route('/view-site-visit/<siteID>/<sortby>/<view>', methods=['GET', 'POST'])
-def view_site_visit(siteID, sortby="desc", view='none'):
-    if not session.get("user"):
-        return redirect(url_for("views.error_401"))
-    sitevisit = SiteVisit.query.filter_by(sitevisitID=siteID).first()
-    if not sitevisit:
-        return redirect(url_for("views.error_404"))
-    projID = sitevisit.projID
-    visit_date = sitevisit.date
-    client = Project.query.get(projID).client
-    proj_number = Project.query.get(projID).proj_number
-
-    # add photo from main site visit page
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file'] 
-        orientation = request.form['orientation']
-        if file.filename == '': 
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = rename_upload(projID)
-            file.save(os.path.join('static/uploads/', filename))
-            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=siteID, orientation=orientation)
-    
-    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
-    featuredphotos = PhotoItem.query.filter_by(siteID=siteID).filter( (PhotoItem.is_immediate==True) |
-                    (PhotoItem.is_nonimmediate==True) | (PhotoItem.is_flagged==True) ).order_by(PhotoItem.time.desc()).all()
-    
-    if sortby == "desc":
-        photoitems = PhotoItem.query.filter_by(siteID=siteID).order_by(PhotoItem.time.desc()).all()
-    if sortby == "asc":
-        photoitems = PhotoItem.query.filter_by(siteID=siteID).order_by(PhotoItem.time).all()
-    
-    # compress photos for thumbnails
-    for photo in photoitems:
-        resize_photo(photo)
-
-    return render_template('view_site_visit.html', proj_number=proj_number, visit_date=visit_date, client=client, prefixes=prefixes,
-            photoitems=photoitems, sitevisit=sitevisit, projID=projID, featuredphotos=featuredphotos, user=session["user"], view=view) 
-
-
-# Convert query of all photos to list object that can be jsonified
-def convert_photos_to_list(photos):
-    converted_list = []
-    for photo in photos:
-        dict = {
-            "photoID": photo.photoID,
-            "siteID": photo.siteID,
-            "filename": photo.filename,
-            "author": photo.author,
-            "time": photo.time,
-            "latitude": photo.latitude,
-            "longitude": photo.longitude,
-            "comment": photo.comment,
-            "is_flagged": photo.is_flagged,
-            "is_immediate": photo.is_immediate,
-            "is_nonimmediate": photo.is_nonimmediate,
-            "orientation": photo.orientation
-        }
-        converted_list.append(dict)
-    return converted_list
-
-
-# View map of all photos taken for an individual site visit
-@views.route('/view-site-visit-map/<siteID>', methods=['GET', 'POST'])
-def view_site_visit_map(siteID):
-    if not session.get("user"):
-        return redirect(url_for("views.error_401"))
-    sitevisit = SiteVisit.query.get(siteID)
-    if not sitevisit:
-        return redirect(url_for("views.error_404"))
-    projID = sitevisit.projID
-    # Add photo from map view page
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        orientation = request.form['orientation']
-        if file.filename == '': 
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = rename_upload(projID)
-            file.save(os.path.join('static/uploads/', filename))
-            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=siteID, orientation=orientation)
-    
-    photo_items = PhotoItem.query.filter_by(siteID=siteID).all()
-    photos = convert_photos_to_list(photo_items)
-    visit_date = sitevisit.date
-    client = Project.query.get(sitevisit.projID).client
-    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
-    proj_number = Project.query.get(sitevisit.projID).proj_number
-    lat = Project.query.get(sitevisit.projID).latitude
-    lon = Project.query.get(sitevisit.projID).longitude
-    
-    # compress photos for thumbnails
-    for photo in photo_items:
-        resize_photo(photo)
-
-    return render_template('view_site_visit_map.html',user=session["user"],proj_number=proj_number,lat=lat,lon=lon, client=client, projID=projID,
-    visit_date=visit_date,prefixes=prefixes,sitevisit=sitevisit,photos=json.dumps(photos),photoitems=photo_items,apikey=api_key)
-
-
-@views.route('/view-site-visit-photos/<siteID>', methods=['GET', 'POST'])
-def view_site_visit_photos(siteID):
-    if not session.get("user"):
-        return redirect(url_for("views.error_401"))
-    sitevisit = SiteVisit.query.get(siteID)
-    if not sitevisit:
-        return redirect(url_for("views.error_404"))
-    projID = sitevisit.projID
-    # add photo from gallery view
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        orientation = request.form['orientation']
-        if file.filename == '': 
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = rename_upload(projID)
-            file.save(os.path.join('static/uploads/', filename))
-            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=siteID, orientation=orientation)
-    # get info for title & header
-    client = Project.query.get(projID).client
-    proj_number = Project.query.get(projID).proj_number
-    visit_date = sitevisit.date
-    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
-    photoitems = PhotoItem.query.filter_by(siteID=siteID).order_by(PhotoItem.time.desc()).all()
-    featuredphotos = PhotoItem.query.filter_by(siteID=siteID).filter( (PhotoItem.is_immediate==True) |
-                    (PhotoItem.is_nonimmediate==True) | (PhotoItem.is_flagged==True) ).order_by(PhotoItem.time.desc()).all()
-    # compress photos for thumbnails
-    for photo in photoitems:
-        resize_photo(photo)
-
-    return render_template('view_site_visit_photos.html', proj_number=proj_number, visit_date=visit_date, client=client, prefixes=prefixes,
-                    sitevisit=sitevisit, photoitems=photoitems, projID=projID, featuredphotos=featuredphotos, user=session["user"]) 
-
-
-# If deleting photo from edit-photo-item, return to view-site-visit,
-# if deleting photo from edit-site-visit, return to edit-site-visit
-@views.route('/delete-photo-item/<id>/<page>', methods=['GET', 'POST'])
-def delete_photo_item(id,page):
-    if not session.get("user"):
-        return redirect(url_for("views.error_401"))
-    photo = PhotoItem.query.get(id)
-    if not photo:
-        return redirect(url_for("views.error_404"))
-    log_crud_photoitem(id, action='DELETE')
-    db.session.delete(photo)
-    db.session.commit()
-    fileStringDel = (photo.filename).split('.jpg')
-    os.remove('static/uploads/' + photo.filename)
-    os.remove('static/uploads/' + fileStringDel[0] + '_resized.jpg')
-    flash("Photo item has been deleted.")
-    if page == "view":
-        return redirect(url_for('views.view_site_visit', siteID=photo.siteID, sortby='desc', view='none'))
-    elif page == "edit":
-        return redirect(url_for('views.edit_site_visit', siteID=photo.siteID))
 
 
 @views.route('/edit-site-visit/<siteID>', methods=['GET'])
@@ -989,28 +690,23 @@ def delete_site_visit(id):
     return redirect(url_for('views.view_all_site_visits', projID=sitevisit.projID))
 
 
-# Retake photo item from view-photo-item page, add to db with same photo ID
-@views.route('/retake-photo-item/<file>/<photoID>', methods=['GET', 'POST'])
-def retake_photo_item(file, photoID):
+# ---------------------------------------------------------------------------------
+# Photo Item - create, update, delete
+
+# Add photo item to db and return to upload photo page
+@views.route('/create-photo-item/<file>', methods=['GET', 'POST'])
+def create_photo_item(file):
     if not session.get("user"):
         return redirect(url_for("views.error_401"))
     if request.method == 'POST':
-        photoitem = PhotoItem.query.get(photoID)
-        if not photoitem:
+        projID = request.form['projID']
+        project = Project.query.get(projID)
+        if not project:
             os.remove('static/uploads/' + file)
             return redirect(url_for("views.error_404"))
-    # Obtain all information from add photo page
+        # Obtain all information from add photo page
         comment = request.form['comment']
         action = request.form['action']
-        if action == "": 
-            if photoitem.is_flagged == True:
-                action = 'is_flagged'
-            elif photoitem.is_immediate == True:
-                action = 'is_immediate'
-            elif photoitem.is_nonimmediate == True:
-                action = 'is_nonimmediate'
-            else:
-                action = 'None'
         siteID = request.form['siteID']
         latitude = request.form['latitude']
         longitude = request.form['longitude']
@@ -1018,79 +714,64 @@ def retake_photo_item(file, photoID):
         time = datetime.now()
         filename = file
         author = session["user"].get("name")
-    # Add photo to the selected site visit
-        projID = request.form['projID']
+        # Add visit. Create a new site visit for today if does not already exist.
+        # Else, add photo to the selected site visit
         if siteID == '-1':
             date = time
             existing_site_visit = SiteVisit.query.filter(SiteVisit.projID==projID, SiteVisit.date.contains(date.strftime("%Y-%m-%d"))).first()
             if existing_site_visit:
                 siteID = existing_site_visit.sitevisitID
-    # Delete original photo
-        log_crud_photoitem(photoID, action='DELETE')
-        db.session.delete(photoitem)
-        db.session.commit()
-        fileStringDel = (photoitem.filename).split('.jpg')
-        os.remove('static/uploads/' + photoitem.filename)
-        os.remove('static/uploads/' + fileStringDel[0] + '_resized.jpg')
-    # Create new photo item with same photoID and link to sitevisitID
+            else:
+                siteID = new_site_visit(projID, date)
+                log_crud_sitevisit(siteID,action='CREATE')
+        # Create new photo item and link to sitevisitID
         if action == 'is_flagged':
-            new_photo_item = PhotoItem(photoID=photoID, time=time,comment=comment,filename=filename,siteID=siteID, orientation=orientation,
-            author=author,latitude=latitude,longitude=longitude,is_flagged=True, is_immediate=False, is_nonimmediate=False)
+            new_photo_item = PhotoItem(time=time,comment=comment,filename=filename,siteID=siteID,
+            author=author,latitude=latitude,longitude=longitude,is_flagged=True,orientation=orientation)
         elif action == 'is_immediate':
-            new_photo_item = PhotoItem(photoID=photoID, time=time,comment=comment,filename=filename,siteID=siteID, orientation=orientation,
-            author=author,latitude=latitude,longitude=longitude,is_immediate=True, is_flagged=False, is_nonimmediate=False)
+            new_photo_item = PhotoItem(time=time,comment=comment,filename=filename,siteID=siteID,
+            author=author,latitude=latitude,longitude=longitude,is_immediate=True,orientation=orientation)
         elif action == 'is_nonimmediate':
-            new_photo_item = PhotoItem(photoID=photoID, time=time,comment=comment,filename=filename,siteID=siteID, orientation=orientation,
-            author=author,latitude=latitude,longitude=longitude,is_nonimmediate=True, is_flagged=False, is_immediate=False)
+            new_photo_item = PhotoItem(time=time,comment=comment,filename=filename,siteID=siteID,
+            author=author,latitude=latitude,longitude=longitude,is_nonimmediate=True,orientation=orientation)
         else:
-            new_photo_item = PhotoItem(photoID=photoID, time=time,comment=comment,filename=filename,siteID=siteID, orientation=orientation,
-            author=author,latitude=latitude,longitude=longitude, is_nonimmediate=False, is_flagged=False, is_immediate=False)
+            new_photo_item = PhotoItem(time=time,comment=comment,filename=filename,siteID=siteID,
+            author=author,latitude=latitude,longitude=longitude,orientation=orientation)
         db.session.add(new_photo_item)
+        sitevisit = SiteVisit.query.get(siteID)
+        if not sitevisit:
+            db.session.delete(new_photo_item)
+            os.remove('static/uploads/' + file)
+            return redirect(url_for("views.error_404"))
+        photoID = PhotoItem.query.filter(PhotoItem.filename==new_photo_item.filename).first().photoID
+        log_crud_photoitem(photoID, action='CREATE')
         db.session.commit()
-        log_crud_photoitem(new_photo_item.photoID, action='CREATE')
         
-    return redirect(url_for('views.view_site_visit', siteID=new_photo_item.siteID, sortby='desc', view=new_photo_item.filename))
+    return redirect(url_for('views.view_site_visit', siteID=siteID, sortby='desc', view=filename)) 
 
 
 # Remove filename from upload folder and redirect to view site visit or view all site visits page
-@views.route('/cancel-retake/<filename>/<photoID>', methods=['GET'])
-def cancel_retake(filename, photoID):
-    os.remove('static/uploads/' + filename)
-    return redirect(url_for("views.view_photo_item", photoID=photoID))
-
-
-@views.route('/view-photo-item/<photoID>', methods=['GET', 'POST'])
-def view_photo_item(photoID):
+@views.route('/cancel-photo-item/<filename>/<siteID>/<projID>', methods=['GET'])
+def cancel_photo_item(filename, siteID, projID):
     if not session.get("user"):
         return redirect(url_for("views.error_401"))
-    photoitem = PhotoItem.query.get(photoID)
-    if not photoitem:
-        return redirect(url_for("views.error_404"))
-    # get info for title & header
-    siteID = photoitem.siteID
-    projID = SiteVisit.query.get(siteID).projID
-    client = Project.query.get(projID).client
-    proj_number = Project.query.get(projID).proj_number
-    visit_date = SiteVisit.query.get(siteID).date
-    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
-    # retake photo
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        orientation = request.form['orientation']
-        if file.filename == '': 
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = rename_upload(projID)
-            file.save(os.path.join('static/uploads/', filename))
-            return render_template('retake_photo_item.html', filename=filename, photoID=photoID, photoitem=photoitem, projID=projID,
-                        user=session["user"], siteID=siteID, orientation=orientation)
+    os.remove('static/uploads/' + filename)
+    if siteID == '-1':
+        return redirect(url_for("views.view_all_site_visits", projID=projID))
+    return redirect(url_for("views.view_site_visit", siteID=siteID, sortby="desc", view='none'))
 
-    return render_template('view_photo_item.html', proj_number=proj_number, visit_date=visit_date, client=client, prefixes=prefixes,
-                            siteID=siteID, photoitem=photoitem, projID=projID, user=session["user"],apikey=api_key)
+
+# Save a resized photo to display in thumbnails
+def resize_photo(photo):
+    fileString = (photo.filename).split('.jpg')
+    if os.path.exists(f'static/uploads/{fileString[0]}_resized.jpg'):
+        pass
+    else:
+        image = Image.open(f'static/uploads/{photo.filename}')
+        image = image.resize((175,175),Image.LANCZOS)
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+        image.save(f'static/uploads/{fileString[0]}_resized.jpg', optimize=True, quality=95)
 
 
 @views.route('/edit-photo-item/<photoID>', methods=['GET'])
@@ -1151,9 +832,366 @@ def save_photo_item(photoID):
         return redirect(url_for("views.view_photo_item", photoID=photoID))
 
 
+# Retake photo item from view-photo-item page, add to db with same photo ID
+@views.route('/retake-photo-item/<file>/<photoID>', methods=['GET', 'POST'])
+def retake_photo_item(file, photoID):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    if request.method == 'POST':
+        photoitem = PhotoItem.query.get(photoID)
+        if not photoitem:
+            os.remove('static/uploads/' + file)
+            return redirect(url_for("views.error_404"))
+    # Obtain all information from add photo page
+        siteID = request.form['siteID']
+        latitude = request.form['latitude']
+        longitude = request.form['longitude']
+        orientation = request.form['orientation']
+        time = datetime.now()
+        filename = file
+        author = session["user"].get("name")
+
+        comment = request.form['comment']
+        action = request.form['action']
+        if action == "": 
+            if photoitem.is_flagged == True:
+                action = 'is_flagged'
+            elif photoitem.is_immediate == True:
+                action = 'is_immediate'
+            elif photoitem.is_nonimmediate == True:
+                action = 'is_nonimmediate'
+            else:
+                action = 'None'
+    # Add photo to the selected site visit
+        projID = request.form['projID']
+        if siteID == '-1':
+            date = time
+            existing_site_visit = SiteVisit.query.filter(SiteVisit.projID==projID, SiteVisit.date.contains(date.strftime("%Y-%m-%d"))).first()
+            if existing_site_visit:
+                siteID = existing_site_visit.sitevisitID
+    # Delete original photo
+        log_crud_photoitem(photoID, action='DELETE')
+        db.session.delete(photoitem)
+        db.session.commit()
+        fileStringDel = (photoitem.filename).split('.jpg')
+        os.remove('static/uploads/' + photoitem.filename)
+        os.remove('static/uploads/' + fileStringDel[0] + '_resized.jpg')
+    # Create new photo item with same photoID and link to sitevisitID
+        if action == 'is_flagged':
+            new_photo_item = PhotoItem(photoID=photoID, time=time,comment=comment,filename=filename,siteID=siteID, orientation=orientation,
+            author=author,latitude=latitude,longitude=longitude,is_flagged=True, is_immediate=False, is_nonimmediate=False)
+        elif action == 'is_immediate':
+            new_photo_item = PhotoItem(photoID=photoID, time=time,comment=comment,filename=filename,siteID=siteID, orientation=orientation,
+            author=author,latitude=latitude,longitude=longitude,is_immediate=True, is_flagged=False, is_nonimmediate=False)
+        elif action == 'is_nonimmediate':
+            new_photo_item = PhotoItem(photoID=photoID, time=time,comment=comment,filename=filename,siteID=siteID, orientation=orientation,
+            author=author,latitude=latitude,longitude=longitude,is_nonimmediate=True, is_flagged=False, is_immediate=False)
+        else:
+            new_photo_item = PhotoItem(photoID=photoID, time=time,comment=comment,filename=filename,siteID=siteID, orientation=orientation,
+            author=author,latitude=latitude,longitude=longitude, is_nonimmediate=False, is_flagged=False, is_immediate=False)
+        db.session.add(new_photo_item)
+        db.session.commit()
+        log_crud_photoitem(new_photo_item.photoID, action='CREATE')
+        
+    return redirect(url_for('views.view_site_visit', siteID=new_photo_item.siteID, sortby='desc', view=new_photo_item.filename))
+
+
+# Remove filename from upload folder and redirect to view site visit or view all site visits page
+@views.route('/cancel-retake/<filename>/<photoID>', methods=['GET'])
+def cancel_retake(filename, photoID):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    os.remove('static/uploads/' + filename)
+    return redirect(url_for("views.view_photo_item", photoID=photoID))
+
+
+# If deleting photo from edit-photo-item, return to view-site-visit,
+# if deleting photo from edit-site-visit, return to edit-site-visit
+@views.route('/delete-photo-item/<id>/<page>', methods=['GET', 'POST'])
+def delete_photo_item(id,page):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    photo = PhotoItem.query.get(id)
+    if not photo:
+        return redirect(url_for("views.error_404"))
+    log_crud_photoitem(id, action='DELETE')
+    db.session.delete(photo)
+    db.session.commit()
+    fileStringDel = (photo.filename).split('.jpg')
+    os.remove('static/uploads/' + photo.filename)
+    os.remove('static/uploads/' + fileStringDel[0] + '_resized.jpg')
+    flash("Photo item has been deleted.")
+    if page == "view":
+        return redirect(url_for('views.view_site_visit', siteID=photo.siteID, sortby='desc', view='none'))
+    elif page == "edit":
+        return redirect(url_for('views.edit_site_visit', siteID=photo.siteID))
+
+
+# ---------------------------------------------------------------------------------
+# Viewing
+
+# Display uploaded photo to add photo page
+@views.route('/uploaded-file/<filename>/', methods=['GET', 'POST'])
+def uploaded_file(filename):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    return send_from_directory( 'static/uploads/', filename)
+
+
+# Return list view of all site visits for a specific project
+@views.route('/view-all-site-visits/<projID>/', methods=['GET', 'POST'])
+def view_all_site_visits(projID):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    project = Project.query.get(projID)
+    if not project:
+        return redirect(url_for("views.error_404"))
+    # Once user is looking at another project, delete temp files
+    dir = 'static/temp'
+    for file in os.listdir(dir):
+        os.remove(os.path.join(dir, file))
+    sitevisits = SiteVisit.query.filter_by(projID=projID).order_by(SiteVisit.date.desc()).all()
+    # add site visit to project
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        orientation = request.form['orientation']
+        if file.filename == '': 
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = rename_upload(projID)
+            file.save(os.path.join('static/uploads/', filename))
+            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=-1, orientation=orientation)
+    
+    # get info for title & header
+    proj_number = project.proj_number
+    client = project.client
+    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
+    # update 'READ' project for current user
+    log_crud_project(proj_number, action='READ')
+
+    # TOTAL PHOTOS PER SITE VISIT
+    visitIDs = SiteVisit.query.with_entities(SiteVisit.sitevisitID).order_by(SiteVisit.date.desc()).all()
+    # create dictionary {key=sitevisitID : value=0}
+    total_photos = { visitID[0] : 0 for visitID in visitIDs }
+    # update value = total number of photos for that site ID
+    for visitID in total_photos.keys():
+        count = PhotoItem.query.with_entities(PhotoItem.photoID).filter(PhotoItem.siteID.like(visitID)).all()
+        total_photos[visitID] = len(count)
+
+    # create dictionary with site visit date and # flagged items
+    items_dct = {}
+    for visit in sitevisits:
+        photos = PhotoItem.query.filter_by(siteID=visit.sitevisitID).filter( (PhotoItem.is_immediate==True) |
+                    (PhotoItem.is_nonimmediate==True) | (PhotoItem.is_flagged==True) ).all()
+        count = len(photos)
+        items_dct[visit.date] = count
+
+    return render_template('view_all_site_visits.html', sitevisits=sitevisits, proj_number=proj_number, prefixes=prefixes,
+        items_dct=items_dct, projID=projID, total_photos=total_photos, client=client, user=session["user"])
+
+
+# Return calendar with site visits
+@views.route('/calendar/<projID>', methods=['GET','POST'])
+def calendar(projID):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    project = Project.query.get(projID)
+    if not project:
+        return redirect(url_for("views.error_404"))
+    visits = SiteVisit.query.filter_by(projID=projID).all()
+    # add site visit to project
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        orientation = request.form['orientation']
+        if file.filename == '': 
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = rename_upload(projID)
+            file.save(os.path.join('static/uploads/', filename))
+            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=-1, orientation=orientation)
+    # get info for title & header
+    proj_number = project.proj_number
+    client = project.client
+    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
+    
+    return render_template('calendar.html', visits=visits, proj_number=proj_number, client=client, projID=projID, prefixes=prefixes, 
+                            user=session["user"])
+
+
+# Redirect to the upload photo page OR the add photo page
+@views.route('/view-site-visit/<siteID>/<sortby>/<view>', methods=['GET', 'POST'])
+def view_site_visit(siteID, sortby="desc", view='none'):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    sitevisit = SiteVisit.query.filter_by(sitevisitID=siteID).first()
+    if not sitevisit:
+        return redirect(url_for("views.error_404"))
+    projID = sitevisit.projID
+    visit_date = sitevisit.date
+    client = Project.query.get(projID).client
+    proj_number = Project.query.get(projID).proj_number
+
+    # add photo from main site visit page
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file'] 
+        orientation = request.form['orientation']
+        if file.filename == '': 
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = rename_upload(projID)
+            file.save(os.path.join('static/uploads/', filename))
+            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=siteID, orientation=orientation)
+    
+    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
+    featuredphotos = PhotoItem.query.filter_by(siteID=siteID).filter( (PhotoItem.is_immediate==True) |
+                    (PhotoItem.is_nonimmediate==True) | (PhotoItem.is_flagged==True) ).order_by(PhotoItem.time.desc()).all()
+    
+    if sortby == "desc":
+        photoitems = PhotoItem.query.filter_by(siteID=siteID).order_by(PhotoItem.time.desc()).all()
+    if sortby == "asc":
+        photoitems = PhotoItem.query.filter_by(siteID=siteID).order_by(PhotoItem.time).all()
+    
+    # compress photos for thumbnails
+    for photo in photoitems:
+        resize_photo(photo)
+
+    return render_template('view_site_visit.html', proj_number=proj_number, visit_date=visit_date, client=client, prefixes=prefixes,
+            photoitems=photoitems, sitevisit=sitevisit, projID=projID, featuredphotos=featuredphotos, user=session["user"], view=view) 
+
+
+# View map of all photos taken for an individual site visit
+@views.route('/view-site-visit-map/<siteID>', methods=['GET', 'POST'])
+def view_site_visit_map(siteID):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    sitevisit = SiteVisit.query.get(siteID)
+    if not sitevisit:
+        return redirect(url_for("views.error_404"))
+    projID = sitevisit.projID
+    # Add photo from map view page
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        orientation = request.form['orientation']
+        if file.filename == '': 
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = rename_upload(projID)
+            file.save(os.path.join('static/uploads/', filename))
+            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=siteID, orientation=orientation)
+    
+    photo_items = PhotoItem.query.filter_by(siteID=siteID).all()
+    photos = convert_photos_to_list(photo_items)
+    visit_date = sitevisit.date
+    client = Project.query.get(sitevisit.projID).client
+    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
+    proj_number = Project.query.get(sitevisit.projID).proj_number
+    lat = Project.query.get(sitevisit.projID).latitude
+    lon = Project.query.get(sitevisit.projID).longitude
+    
+    # compress photos for thumbnails
+    for photo in photo_items:
+        resize_photo(photo)
+
+    return render_template('view_site_visit_map.html',user=session["user"],proj_number=proj_number,lat=lat,lon=lon, client=client, projID=projID,
+    visit_date=visit_date,prefixes=prefixes,sitevisit=sitevisit,photos=json.dumps(photos),photoitems=photo_items,apikey=app_config.API_KEY)
+
+
+@views.route('/view-site-visit-photos/<siteID>', methods=['GET', 'POST'])
+def view_site_visit_photos(siteID):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    sitevisit = SiteVisit.query.get(siteID)
+    if not sitevisit:
+        return redirect(url_for("views.error_404"))
+    projID = sitevisit.projID
+    # add photo from gallery view
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        orientation = request.form['orientation']
+        if file.filename == '': 
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = rename_upload(projID)
+            file.save(os.path.join('static/uploads/', filename))
+            return render_template('add_photo.html', filename=filename, projID=projID, user=session["user"], siteID=siteID, orientation=orientation)
+    # get info for title & header
+    client = Project.query.get(projID).client
+    proj_number = Project.query.get(projID).proj_number
+    visit_date = sitevisit.date
+    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
+    photoitems = PhotoItem.query.filter_by(siteID=siteID).order_by(PhotoItem.time.desc()).all()
+    featuredphotos = PhotoItem.query.filter_by(siteID=siteID).filter( (PhotoItem.is_immediate==True) |
+                    (PhotoItem.is_nonimmediate==True) | (PhotoItem.is_flagged==True) ).order_by(PhotoItem.time.desc()).all()
+    # compress photos for thumbnails
+    for photo in photoitems:
+        resize_photo(photo)
+
+    return render_template('view_site_visit_photos.html', proj_number=proj_number, visit_date=visit_date, client=client, prefixes=prefixes,
+                    sitevisit=sitevisit, photoitems=photoitems, projID=projID, featuredphotos=featuredphotos, user=session["user"]) 
+
+
+@views.route('/view-photo-item/<photoID>', methods=['GET', 'POST'])
+def view_photo_item(photoID):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
+    photoitem = PhotoItem.query.get(photoID)
+    if not photoitem:
+        return redirect(url_for("views.error_404"))
+    # get info for title & header
+    siteID = photoitem.siteID
+    projID = SiteVisit.query.get(siteID).projID
+    client = Project.query.get(projID).client
+    proj_number = Project.query.get(projID).proj_number
+    visit_date = SiteVisit.query.get(siteID).date
+    prefixes = ["Village of ", "City of ", "Town of ", "County of "]
+    # retake photo
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        orientation = request.form['orientation']
+        if file.filename == '': 
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = rename_upload(projID)
+            file.save(os.path.join('static/uploads/', filename))
+            return render_template('retake_photo_item.html', filename=filename, photoID=photoID, photoitem=photoitem, projID=projID,
+                        user=session["user"], siteID=siteID, orientation=orientation)
+
+    return render_template('view_photo_item.html', proj_number=proj_number, visit_date=visit_date, client=client, prefixes=prefixes,
+                            siteID=siteID, photoitem=photoitem, projID=projID, user=session["user"],apikey=app_config.API_KEY)
+
+
+# ---------------------------------------------------------------------------------
+# Export
+
 # Export project as zip file
 @views.route('/export-project/<projID>', methods=['GET', 'POST'])
 def export_project(projID):
+    if not session.get("user"):
+        return redirect(url_for("views.error_401"))
     # Rename zip file
     pnum = Project.query.get(projID).proj_number
     time = datetime.now().strftime("%H%M%S")

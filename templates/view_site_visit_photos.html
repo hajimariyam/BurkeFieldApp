@@ -60,7 +60,7 @@
 <hr style="margin-top: 0%; box-shadow: 0 0 3px 2px rgb(180, 180, 180);">
 
 <div>
-    <p class="noteHead"><strong><i>Site Visit Notes</i></strong></p>
+    <p class="noteHead"><strong>Site Visit Notes</strong></p>
 </div>
 
 <div id="body" class="body">
@@ -80,7 +80,7 @@
 
     <!-- Featured (flagged) photos -->
     {% if photoitems|length > 0 %}
-    <p class="photoHeaders"><strong><i>Featured Photos</i></strong></p>
+    <p class="photoHeaders"><strong>Featured Photos</strong></p>
 
         {% if featuredphotos|length == 0 %}
             <a></a>
@@ -131,7 +131,7 @@
     {% endif %}
 
     <!-- All photos -->
-    <p class="photoHeaders"><strong><i>All Photos</i></strong></p>
+    <p class="photoHeaders"><strong>All Photos</strong></p>
 
     {% if photoitems | length == 0 %}
         <div style="padding: 10px;">
@@ -160,6 +160,7 @@
     <br><br><br>
 </div>
 
+<!-- JavaScript for retrieving orientation if photo taken -->
 <script>
     const isIOS = 
         navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
@@ -171,6 +172,7 @@
         }
     }
 
+    // called when + photo or upload photo is selected
     function startCompass() {
         if (isIOS) {
             DeviceOrientationEvent.requestPermission()
@@ -192,7 +194,6 @@
     }
 
     window.onload = init();
-
 </script>
 
 {% endblock content %}

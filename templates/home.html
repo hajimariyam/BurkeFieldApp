@@ -21,7 +21,7 @@
   <div style="padding-top: 2%;">
       <div style="float:left !important;">
           <!-- Nearby Projects sort the projects based on the user's location -->
-          <p class="homeTitles"><strong><i>Nearby Projects...</i></strong></p>
+          <p class="homeTitles"><strong>Nearby Projects...</strong></p>
           <i><p class="locationTitle" id="location">Loading...</p></i>
       </div>
       <!-- Address book icon that navigates to the clients page -->
@@ -36,7 +36,7 @@
           <tr>
               <td id="empty" scope="row">
                 <a id="nearbyproj" style="text-decoration: none; color:black;" href="#" onclick="document.getElementById('dummyform').submit();">
-                Loading...</a>
+                <i>Loading...</a></i>
               </td>
           </tr>
           <tr>
@@ -56,7 +56,7 @@
   </form>
 
   <!-- Recent projects sort the projects by last accessed date -->
-  <p class="homeTitles" style="padding-top: 3%; margin-top: 0% !important;"><strong><i>Recent Projects...</i></strong></p>
+  <p class="homeTitles" style="padding-top: 3%; margin-top: 0% !important;"><strong>Recent Projects...</strong></p>
   <table class="table table-striped">
       <thead>
       </thead>
@@ -89,11 +89,12 @@
   </table>
 </div>
 
+<!-- JavaScript; find nearest projects to user's current location -->
 <script>
   window.onload = getLocation;
   const platform = new H.service.Platform({
-    "app_id": "g8uCA1PX0zhQJlsVwuoK",
-    "apikey": "sAOR5sR30TlPANYwgsfNKPe4Hec9GxMmq-BOgHXM8pk"
+    "app_id": "lCpSAGjxzewsZ7IC7lKY", 
+    "apikey": "QZSUs4SSObyKBQ3awVBPeOxxZpaKFrQOR9w6tHZmByo"
   });
 
   const geocoderService = platform.getGeocodingService(); 

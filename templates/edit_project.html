@@ -12,6 +12,7 @@
   class=" btn btn-danger btn-xs" style="float: right; background-color: rgba(194, 5, 5, 0.753) !important;"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i> Project</a>
 </div>
 
+<!-- Form Elements -->
 <div class="container">
     <form action="{{url_for('views.update_project')}}"  id="edit-form" method="POST">
         <div class="form-group" style="margin-top: 2.0em;">
@@ -38,10 +39,11 @@
 
 <!-- Map Location -->
 <div class = "container" style="width: 100vw; height: 50vh; margin-top: 2.0em; margin-bottom: 4.0em; max-width: 1000px;" id="mapContainer"></div>
+  <!-- Map JavaScript -->
   <script>
   // Initialize the platform object:
   var platform = new H.service.Platform({
-  'apikey': '{{apikey}}'
+    'apikey': '{{apikey}}'
   });
 
   const lng = {{proj.longitude}};
@@ -59,6 +61,7 @@
       center: { lat: lat, lng: lng }
     });
 	
+  // Create additional map-based features
   var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
   var ui = H.ui.UI.createDefault(map, defaultLayers);
 

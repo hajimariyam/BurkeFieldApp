@@ -66,6 +66,8 @@
 
 <!-- Embedded interactive map of all photos and current location -->
 <div class = "container" style="width: 100vw; height: 65vh; margin-bottom: 4.0em; max-width: 1000px;" id="mapContainer"></div>
+
+<!-- Map JavaScipt -->
 <script>
   // Initialize the platform object:
   var platform = new H.service.Platform({
@@ -245,6 +247,7 @@
 </script>
 </div>
 
+<!-- JavaScript for retrieving orientation if photo taken -->
 <script>
   const isIOS = 
       navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
@@ -256,6 +259,7 @@
       }
   }
 
+  // called when + photo or upload photo is selected
   function startCompass() {
       if (isIOS) {
           DeviceOrientationEvent.requestPermission()

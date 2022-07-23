@@ -84,6 +84,7 @@
     calendar.render();
 </script>
 
+<!-- JavaScript for retrieving orientation if photo taken -->
 <script>
     const isIOS = 
         navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
@@ -95,6 +96,7 @@
         }
     }
 
+    // called when + photo or upload photo is selected
     function startCompass() {
         if (isIOS) {
             DeviceOrientationEvent.requestPermission()

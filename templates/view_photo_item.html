@@ -125,6 +125,7 @@
         }
       }
 
+      // Get current location and display onto map
       function showPosition(position) {
         geocoderService.reverseGeocode(
           {
@@ -156,6 +157,7 @@
     </script>
     </div>
 
+    <!-- JavaScript for retrieving orientation if photo taken -->
     <script>
       const isIOS = 
           navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
@@ -167,6 +169,7 @@
           }
       }
   
+      // called when + photo or upload photo is selected
       function startCompass() {
           if (isIOS) {
               DeviceOrientationEvent.requestPermission()
