@@ -22,22 +22,22 @@ With the essential tools now accessible in a single app, professionals will be a
 
 ## Further Developments
 In future iterations of development, the following features will be implemented:
-    - Desktop version
-    - Markup photos
-    - Collect weather data per photo
-    - Generate company-standard site visit reports
-    - Choose what data to export or include in report
-    - Filter project data by department
+- Desktop version
+- Markup photos
+- Collect weather data per photo
+- Generate company-standard site visit reports
+- Choose what data to export or include in report
+- Filter project data by department
 
 ## Technologies & APIs
-**Microsoft Login:** utilizes Microsoft Authentication Library (MSAL), Microsoft Identity platform (Azure Active Directory), Microsoft Graph
+- **Microsoft Login:** utilizes Microsoft Authentication Library (MSAL), Microsoft Identity platform (Azure Active Directory), Microsoft Graph
     - https://docs.microsoft.com/en-us/azure/active-directory/develop/web-app-quickstart?pivots=devlang-python
     - https://github.com/Azure-Samples/ms-identity-python-webapp
     - *Login to Microsoft Azure portal (https://portal.azure.com/) for Client ID, Client Secret, and Tenant ID*
-**Location Services:** utilizes HERE Map Rendering and HERE Geocoding
+- **Location Services:** utilizes HERE Map Rendering and HERE Geocoding
     - 250k API calls/month allowed (refer to HERE Maps documentation)
     - *Login to HERE Developer Portal (https://developer.here.com/login) for App ID and API Keys*
-**ngrok**
+- **ngrok**
 
 ## How To Run
 1. Create a virtual environment with Python 3.8 or greater installed (Pickle Protocol 5 required)
