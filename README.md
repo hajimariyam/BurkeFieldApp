@@ -12,13 +12,16 @@
 ## Description
 The web application contained in this repository was developed for specialists in the Environmental Resources department at Christopher B. Burke Engineering, Ltd. and intends to serve as a resource for departments across the company. Professionals on the field will use the app on a mobile device to optimize and expedite the documentation of field conditions and improve communication with clients. 
 
-The core functionality of the app is to take photographs; collect location, orientation, date, time, and author data for each photo; link photos to a project and site visit; caption photos or visits with findings; flag photos as action items; and export select project or site visit data for in-office use, offline access, or status updates. A map is available for each site visit, populated with icon-sized version of the photos according to their geolocation, and an arrow to showcase the phone's orientation at the time of capture. Project, visit, and photo data may also be updated or deleted. 
+The core functionality of the app is to take photographs; collect location, orientation, date, time, and author data for each photo; link photos to a project and site visit; caption photos or visits with findings; flag photos as action items; search data and sort results; and export select project or site visit data for in-office use, offline access, or status updates. A map is available for each site visit, populated with icon-sized version of the photos according to their geolocation, and an arrow to showcase the phone's orientation at the time of capture. Project, visit, and photo data may also be updated or deleted. 
 
 Employees must sign in to the web app using their company Microsoft login so that CRUD functions performed by the user may be logged. To simplify collaboration and access, client and project data is available to all company staff across mobile and web and stored in one location. However, project delete permissions are restricted to the project author. The application is organized as Clients -> Projects -> Site Visits -> Photos. 
 
 The company's current workflow involves regular data collection using available resources. Professionals in the Environmental Department, for example, mark off locations on paper maps, photograph field conditions on personal smartphones, and access photos on desktop via email or other cloud storage and file-sharing services. However, these methods of collecting, storing, and reporting data are time-consuming and may produce unsatisfactory results. Making phone calls to clients between field sites and the office, attempting to verbally indicate the location of problem areas, only being able to write notes in the office and provide clients with data long after site visits, and managing existing methods of data collection in adverse weather conditions are examples of problems that professionals face. 
 
 With the essential tools now accessible in a single app, professionals will be able to quickly document field conditions, especially in the case of tough weather conditions, and continue updating information on-the-go.
+
+### **Utilized**:
+Python, HTML, CSS, JavaScript, Twitter Bootstrap, Flask, Jinja, SQLiteStudio, SQLAlchemy
 
 ## Further Developments
 In future iterations of development, the following features will be implemented:
