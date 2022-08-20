@@ -10,7 +10,7 @@
 5. [AAS Deployment](#AAS-Deployment)
 
 ## Description
-The web application contained in this repository was developed for specialists in the Environmental Resources department at Christopher B. Burke Engineering, Ltd. and intends to serve as a resource for departments across the company. Professionals on the field will use the app on a mobile device to optimize and expedite the documentation of field conditions and improve communication with clients. 
+The web application contained in this repository was developed for specialists in the Environmental Resources department at *[removed]* and intends to serve as a resource for departments across the company. Professionals on the field will use the app on a mobile device to optimize and expedite the documentation of field conditions and improve communication with clients. 
 
 The core functionality of the app is to take photographs; collect location, orientation, date, time, and author data for each photo; link photos to a project and site visit; caption photos or visits with findings; flag photos as action items; search data and sort results; and export select project or site visit data for in-office use, offline access, or status updates. A map is available for each site visit, populated with icon-sized version of the photos according to their geolocation, and an arrow to showcase the phone's orientation at the time of capture. Project, visit, and photo data may also be updated or deleted. 
 
